@@ -1,0 +1,12 @@
+services:
+  database:
+    image: docker.io/mariadb:latest
+    container_name: restaurant-db
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    volumes:
+      - data:/var/lib/mysql
+volumes:
+  data:
