@@ -1,11 +1,7 @@
-from typing import Annotated
-
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, Query
-from models import create_db_and_tables, get_session, Hero
-from sqlmodel import Session, select
-
-SessionDep = Annotated[Session, Depends(get_session)]
+from fastapi import FastAPI
+from .database import create_db_and_tables
+from .hero import router as hero_router
 
 
 @asynccontextmanager
@@ -22,11 +18,4 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/heroes/")
-def read_heroes(
-    session: SessionDep,
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
-) -> list[Hero]:
-    heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
-    return heroes
+app.include_router(hero_router)
