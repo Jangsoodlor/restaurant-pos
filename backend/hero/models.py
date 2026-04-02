@@ -1,8 +1,17 @@
 from sqlmodel import Field, SQLModel
 
 
-class Hero(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class HeroBase(SQLModel):
     name: str = Field(max_length=255)
-    secret_name: str = Field(max_length=255)
     age: int | None = None
+
+
+class Hero(HeroBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    secret_name: str = Field(max_length=255)
+
+
+class HeroUpdate(HeroBase):
+    name: str | None = None
+    age: int | None = None
+    secret_name: str | None = None
