@@ -1,19 +1,17 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlmodel import select, Session
+from fastapi import APIRouter, Query, HTTPException
+from sqlmodel import select
 from .models import User, UserUpdate
 from typing import Annotated
-from ..database import get_session
+from ..database import SessionDep
 
 router = APIRouter(
     prefix="/user",
     tags=["user"],
 )
 
-SessionDep = Annotated[Session, Depends(get_session)]
-
 
 @router.get("/")
-def read_users(
+def list_users(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
@@ -41,7 +39,7 @@ def delete_user(user_id: int, session: SessionDep):
 
 
 @router.patch("/{user_id}", response_model=User)
-def update_user(user_id: int, user: UserUpdate, session: SessionDep):
+def partial_update_user(user_id: int, user: UserUpdate, session: SessionDep):
     hero_db = session.get(User, user_id)
     if not hero_db:
         raise HTTPException(status_code=404, detail="Hero not found")

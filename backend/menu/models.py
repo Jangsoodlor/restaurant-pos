@@ -10,7 +10,7 @@ class MenuItem(MenuBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
 
-class MenuModifier(MenuBase):
+class MenuModifier(MenuBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
 
