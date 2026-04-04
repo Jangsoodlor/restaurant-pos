@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from .database import create_db_and_tables
-from .hero import router as hero_router
+from .user import router as user_router
 
 
 @asynccontextmanager
@@ -18,4 +18,4 @@ def read_root():
     return {"Hello": "World"}
 
 
-app.include_router(hero_router)
+app.include_router(user_router)

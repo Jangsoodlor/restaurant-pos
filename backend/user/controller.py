@@ -1,38 +1,38 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import select, Session
-from .models import Hero, HeroUpdate
+from .models import User, UserUpdate
 from typing import Annotated
 from ..database import get_session
 
 router = APIRouter(
-    prefix="/hero",
-    tags=["hero"],
+    prefix="/user",
+    tags=["user"],
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.get("/")
-def read_heroes(
+def read_users(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> list[Hero]:
-    heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
+) -> list[User]:
+    heroes = session.exec(select(User).offset(offset).limit(limit)).all()
     return heroes
 
 
 @router.post("/")
-def create_hero(hero: Hero, session: SessionDep) -> Hero:
-    session.add(hero)
+def create_user(user: User, session: SessionDep) -> User:
+    session.add(user)
     session.commit()
-    session.refresh(hero)
-    return hero
+    session.refresh(user)
+    return user
 
 
-@router.delete("/{hero_id}")
-def delete_hero(hero_id: int, session: SessionDep):
-    hero = session.get(Hero, hero_id)
+@router.delete("/{user_id}")
+def delete_user(user_id: int, session: SessionDep):
+    hero = session.get(User, user_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
     session.delete(hero)
@@ -40,12 +40,12 @@ def delete_hero(hero_id: int, session: SessionDep):
     return {"ok": True}
 
 
-@router.patch("/{hero_id}", response_model=Hero)
-def update_hero(hero_id: int, hero: HeroUpdate, session: SessionDep):
-    hero_db = session.get(Hero, hero_id)
+@router.patch("/{user_id}", response_model=User)
+def update_user(user_id: int, user: UserUpdate, session: SessionDep):
+    hero_db = session.get(User, user_id)
     if not hero_db:
         raise HTTPException(status_code=404, detail="Hero not found")
-    hero_data = hero.model_dump(exclude_unset=True)
+    hero_data = user.model_dump(exclude_unset=True)
     hero_db.sqlmodel_update(hero_data)
     session.add(hero_db)
     session.commit()

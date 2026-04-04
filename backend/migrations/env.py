@@ -10,10 +10,11 @@ from sqlalchemy import pool
 
 from alembic import context
 from sqlmodel import SQLModel
-from backend.hero.models import Hero  # ← absolute import
 
 # TODO: import other models here once it's implemented
-from backend.config import get_settings  # ← absolute import
+from backend.user.models import User
+
+from backend.config import get_settings
 
 
 # this is the Alembic Config object, which provides

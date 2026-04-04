@@ -1,2 +1,2 @@
+from .models import User
 from .controller import router
-from .models import Hero
