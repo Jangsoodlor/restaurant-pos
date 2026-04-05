@@ -134,7 +134,7 @@ class TestTableRetrieve:
         """Test retrieving a table that doesn't exist."""
         response = client.get("/table/999")
         assert response.status_code == 404
-        assert "Table not found" in response.json()["detail"]
+        assert "Table with ID 999 not found." in response.json()["detail"]
 
     def test_retrieve_table_with_different_statuses(
         self, client: TestClient, session: Session
@@ -336,7 +336,7 @@ class TestTableUpdate:
         payload = {"table_name": "New Name"}
         response = client.patch("/table/999", json=payload)
         assert response.status_code == 404
-        assert "Table not found" in response.json()["detail"]
+        assert "Table with ID 999 not found." in response.json()["detail"]
 
     def test_partial_update_invalid_capacity(
         self, client: TestClient, session: Session
@@ -387,7 +387,7 @@ class TestTableDelete:
         """Test deleting a table that doesn't exist."""
         response = client.delete("/table/999")
         assert response.status_code == 404
-        assert "Table not found" in response.json()["detail"]
+        assert "Table with ID 999 not found." in response.json()["detail"]
 
     def test_delete_table_returns_no_content(
         self, client: TestClient, session: Session

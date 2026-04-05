@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Query, HTTPException, Depends, status
-from sqlmodel import select
-from .models import Table, TableUpdate, TableBase
-from .service import TableService
+from collections.abc import Sequence
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from ..common.exceptions import EntityNotFoundError
 from ..database import SessionDep
+from .models import Table, TableBase, TableUpdate
+from .repository import TableRepository, get_table_repository
+
+RepoDep = Annotated[TableRepository, Depends(get_table_repository)]
 
 router = APIRouter(
     prefix="/table",
@@ -11,50 +16,52 @@ router = APIRouter(
 )
 
 
-def get_table_service() -> TableService:
-    """Dependency injection for TableService."""
-    return TableService()
-
-
 @router.get("/")
 def list_tables(
     session: SessionDep,
+    repo: RepoDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-    service: TableService = Depends(get_table_service),
-) -> list[Table]:
+) -> Sequence[Table]:
     """Get all tables with pagination."""
-    return service.list(session, offset, limit)
+    return repo.list(session, offset, limit)
 
 
 @router.get("/{table_id}")
 def retrieve_table(
     table_id: int,
     session: SessionDep,
-    service: TableService = Depends(get_table_service),
+    repo: RepoDep,
 ) -> Table:
     """Get a single table by ID."""
-    return service.retrieve(session, table_id)
+    try:
+        return repo.retrieve(session, table_id)
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_table(
     table: TableBase,
     session: SessionDep,
-    service: TableService = Depends(get_table_service),
+    repo: RepoDep,
 ) -> Table:
     """Create a new table."""
-    return service.create(session, table)
+    return repo.create(session, table)
 
 
 @router.delete("/{table_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_table(
     table_id: int,
     session: SessionDep,
-    service: TableService = Depends(get_table_service),
+    repo: RepoDep,
 ):
     """Delete a table by ID."""
-    service.delete(session, table_id)
+    try:
+        repo.delete(session, table_id)
+        return {"ok", "deleted"}
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)
 
 
 @router.patch("/{table_id}", response_model=Table)
@@ -62,7 +69,10 @@ def partial_update_table(
     table_id: int,
     table: TableUpdate,
     session: SessionDep,
-    service: TableService = Depends(get_table_service),
+    repo: RepoDep,
 ):
     """Partially update a table (only provided fields)."""
-    return service.patch(session, table_id, table)
+    try:
+        return repo.patch(session, table_id, table)
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)

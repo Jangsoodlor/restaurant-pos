@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel
 from enum import Enum
+from pydantic import ConfigDict
 
 
 class Role(Enum):
@@ -9,6 +10,8 @@ class Role(Enum):
 
 
 class UserBase(SQLModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     name: str = Field(max_length=255)
     role: Role
 
@@ -18,5 +21,7 @@ class User(UserBase, table=True):
 
 
 class UserUpdate(UserBase):
+    model_config = ConfigDict(use_enum_values=True)
+
     name: str | None = None
     role: Role | None = None
