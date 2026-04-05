@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Query, HTTPException
-from sqlmodel import select
-from .models import User, UserUpdate
+from collections.abc import Sequence
 from typing import Annotated
-from ..database import SessionDep
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from ..common.exceptions import EntityNotFoundError
+from .models import User, UserBase, UserUpdate
+from .repository import UserRepository, get_user_repository
+
+RepoDep = Annotated[UserRepository, Depends(get_user_repository)]
 
 router = APIRouter(
     prefix="/user",
@@ -12,40 +17,56 @@ router = APIRouter(
 
 @router.get("/")
 def list_users(
-    session: SessionDep,
+    repo: RepoDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> list[User]:
-    heroes = session.exec(select(User).offset(offset).limit(limit)).all()
-    return heroes
+) -> Sequence[User]:
+    """Get all users with pagination."""
+    return repo.list(offset, limit)
 
 
-@router.post("/")
-def create_user(user: User, session: SessionDep) -> User:
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
+@router.get("/{user_id}")
+def retrieve_user(
+    user_id: int,
+    repo: RepoDep,
+) -> User:
+    """Get a single user by ID."""
+    try:
+        return repo.retrieve(user_id)
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)
 
 
-@router.delete("/{user_id}")
-def delete_user(user_id: int, session: SessionDep):
-    hero = session.get(User, user_id)
-    if not hero:
-        raise HTTPException(status_code=404, detail="Hero not found")
-    session.delete(hero)
-    session.commit()
-    return {"ok": True}
+@router.post("/", status_code=status.HTTP_201_CREATED)
+def create_user(
+    user: UserBase,
+    repo: RepoDep,
+) -> User:
+    """Create a new user."""
+    return repo.create(user)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    repo: RepoDep,
+):
+    """Delete a user by ID."""
+    try:
+        repo.delete(user_id)
+        return {"ok": "deleted"}
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)
 
 
 @router.patch("/{user_id}", response_model=User)
-def partial_update_user(user_id: int, user: UserUpdate, session: SessionDep):
-    hero_db = session.get(User, user_id)
-    if not hero_db:
-        raise HTTPException(status_code=404, detail="Hero not found")
-    hero_data = user.model_dump(exclude_unset=True)
-    hero_db.sqlmodel_update(hero_data)
-    session.add(hero_db)
-    session.commit()
-    session.refresh(hero_db)
-    return hero_db
+def partial_update_user(
+    user_id: int,
+    user: UserUpdate,
+    repo: RepoDep,
+):
+    """Partially update a user (only provided fields)."""
+    try:
+        return repo.patch(user_id, user)
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)

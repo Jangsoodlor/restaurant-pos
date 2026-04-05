@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import ConfigDict
 
 
-class Role(Enum):
+class Role(str, Enum):
     WAITER = "waiter"
     COOK = "cook"
     MANAGER = "manager"
@@ -23,5 +23,5 @@ class User(UserBase, table=True):
 class UserUpdate(UserBase):
     model_config = ConfigDict(use_enum_values=True)
 
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=255)
     role: Role | None = None
