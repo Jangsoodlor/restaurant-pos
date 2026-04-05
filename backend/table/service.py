@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlmodel import select, Session
-from .models import Table, TableUpdate
+from .models import Table, TableUpdate, TableBase
 
 
 class TableService:
@@ -19,12 +19,13 @@ class TableService:
             raise HTTPException(status_code=404, detail="Table not found")
         return table
 
-    def create(self, session: Session, table: Table) -> Table:
+    def create(self, session: Session, table: TableBase) -> Table:
         """Create a new table."""
-        session.add(table)
+        db_table = Table.model_validate(table)
+        session.add(db_table)
         session.commit()
-        session.refresh(table)
-        return table
+        session.refresh(db_table)
+        return db_table
 
     def delete(self, session: Session, table_id: int) -> None:
         """Delete a table by ID."""
@@ -34,7 +35,7 @@ class TableService:
         session.delete(table)
         session.commit()
 
-    def partial_update(
+    def patch(
         self, session: Session, table_id: int, table_update: TableUpdate
     ) -> Table:
         """Update only the provided fields of a table."""

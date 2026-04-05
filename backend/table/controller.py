@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException, Depends, status
 from sqlmodel import select
-from .models import Table, TableUpdate
+from .models import Table, TableUpdate, TableBase
 from .service import TableService
 from typing import Annotated
 from ..database import SessionDep
@@ -28,7 +28,7 @@ def list_tables(
 
 
 @router.get("/{table_id}")
-def get_table(
+def retrieve_table(
     table_id: int,
     session: SessionDep,
     service: TableService = Depends(get_table_service),
@@ -39,7 +39,7 @@ def get_table(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_table(
-    table: Table,
+    table: TableBase,
     session: SessionDep,
     service: TableService = Depends(get_table_service),
 ) -> Table:
@@ -65,4 +65,4 @@ def partial_update_table(
     service: TableService = Depends(get_table_service),
 ):
     """Partially update a table (only provided fields)."""
-    return service.partial_update(session, table_id, table)
+    return service.patch(session, table_id, table)

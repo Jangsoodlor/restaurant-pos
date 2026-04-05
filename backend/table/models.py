@@ -9,18 +9,21 @@ class TableStatus(str, Enum):
     OCCUPIED = "occupied"
 
 
-class Table(SQLModel, table=True):
+class TableBase(SQLModel):
     model_config = ConfigDict(use_enum_values=True)
 
-    id: int | None = Field(default=None, primary_key=True)
     table_name: str
     capacity: int = Field(ge=1)
     status: TableStatus
+
+
+class Table(TableBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
 
 
 class TableUpdate(SQLModel):
     model_config = ConfigDict(use_enum_values=True)
 
     table_name: str | None = None
-    capacity: int | None = None
+    capacity: int | None = Field(default=None, ge=1)
     status: TableStatus | None = None
