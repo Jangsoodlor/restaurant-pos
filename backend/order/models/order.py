@@ -1,31 +1,20 @@
 from datetime import datetime, timezone
 
-from order_status import OrderStatus
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
-from ...table import Table
-from ...user import User
-from .order_line_item import OrderLineItem
+from .order_status import OrderStatus
 
 
-class OrderBase(SQLModel):
-    table_id: int = Field(foreign_key="table.id")
-    user_id: int = Field(foreign_key="user.id")
-    status: OrderStatus = Field(default=OrderStatus.OPEN)
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-    )
-    closed_at: datetime | None = Field(default=None)
+class OrderCreate(SQLModel):
+    """Schema for creating a new order"""
 
-    # Relationships
-    table: "Table" = Relationship()
-    user: "User" = Relationship()
-    line_items: list["OrderLineItem"] = Relationship(back_populates="order")
-
-    @property
-    def total(self) -> float:
-        return sum(item.subtotal for item in self.line_items)
+    table_id: int
+    user_id: int
+    status: OrderStatus = OrderStatus.DRAFT
 
 
-class Order(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class OrderUpdate(SQLModel):
+    """Schema for updating an order (all fields optional for PATCH)"""
+
+    status: OrderStatus | None = None
+    closed_at: datetime | None = None
