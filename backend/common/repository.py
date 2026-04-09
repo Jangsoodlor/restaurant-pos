@@ -1,4 +1,3 @@
-import abc
 from collections.abc import Sequence
 from typing import Generic, TypeVar, ClassVar
 
@@ -6,13 +5,14 @@ from sqlmodel import Session, SQLModel, select
 
 from .exceptions import EntityNotFoundError
 from .database import SessionDep
+from .events import EventObserver
 
 Model = TypeVar("Model", bound=SQLModel)
 CreateDTO = TypeVar("CreateDTO", bound=SQLModel)
 UpdateDTO = TypeVar("UpdateDTO", bound=SQLModel)
 
 
-class AbstractRepository(abc.ABC, Generic[Model, CreateDTO, UpdateDTO]):
+class AbstractRepository(EventObserver, Generic[Model, CreateDTO, UpdateDTO]):
     model: ClassVar[Model]
 
     def __init__(
@@ -43,6 +43,9 @@ class AbstractRepository(abc.ABC, Generic[Model, CreateDTO, UpdateDTO]):
         self.session.commit()
         self.session.refresh(db_entity)
         return db_entity
+
+    def create_many(self):
+        raise NotImplementedError
 
     def delete(self, entity_id: int) -> None:
         """Delete an entity by ID."""
