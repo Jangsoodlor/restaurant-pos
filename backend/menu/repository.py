@@ -3,10 +3,7 @@ from .models import (
     MenuBase,
     MenuItem,
     MenuModifier,
-    MenuRecord,
-    MenuRecordBase,
     MenuUpdate,
-    MenuRecordUpdate,
 )
 
 
@@ -28,9 +25,3 @@ class MenuModifierRepository(
     ]
 ):
     model = MenuModifier
-
-
-class MenuRecordRepository(
-    AbstractRepository[MenuRecord, MenuRecordBase, MenuRecordUpdate]
-):
-    model = MenuRecord
