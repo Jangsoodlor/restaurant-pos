@@ -1,4 +1,10 @@
+from enum import Enum
 from sqlmodel import Field, SQLModel
+
+
+class MenuItemType(str, Enum):
+    ITEM = "item"
+    MODIFIER = "modifier"
 
 
 class MenuBase(SQLModel):
@@ -8,10 +14,7 @@ class MenuBase(SQLModel):
 
 class MenuItem(MenuBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-
-
-class MenuModifier(MenuBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    type: MenuItemType = Field(default=MenuItemType.ITEM)
 
 
 class MenuUpdate(SQLModel):

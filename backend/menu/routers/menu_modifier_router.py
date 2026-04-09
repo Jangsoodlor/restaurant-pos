@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ...common.exceptions import EntityNotFoundError
-from ..models import MenuBase, MenuModifier, MenuUpdate
+from ..models import MenuBase, MenuItem, MenuUpdate
 from ..repository import MenuModifierRepository
 
 # Update the dependency to use the MenuModifierRepository
@@ -21,7 +21,7 @@ def list_modifiers(
     repo: RepoDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] | None = None,
-) -> Sequence[MenuModifier]:
+) -> Sequence[MenuItem]:
     """Get all menu modifiers with pagination."""
     return repo.list(offset, limit)
 
@@ -30,7 +30,7 @@ def list_modifiers(
 def retrieve_modifier(
     modifier_id: int,
     repo: RepoDep,
-) -> MenuModifier:
+) -> MenuItem:
     """Get a single menu modifier by ID."""
     try:
         return repo.retrieve(modifier_id)
@@ -42,7 +42,7 @@ def retrieve_modifier(
 def create_modifier(
     modifier: MenuBase,
     repo: RepoDep,
-) -> MenuModifier:
+) -> MenuItem:
     """Create a new menu modifier."""
     return repo.create(modifier)
 
@@ -60,7 +60,7 @@ def delete_modifier(
         raise HTTPException(status_code=404, detail=e.message)
 
 
-@router.patch("/{modifier_id}", response_model=MenuModifier)
+@router.patch("/{modifier_id}", response_model=MenuItem)
 def partial_update_modifier(
     modifier_id: int,
     modifier: MenuUpdate,

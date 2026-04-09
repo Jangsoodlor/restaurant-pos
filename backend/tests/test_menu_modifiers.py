@@ -10,7 +10,7 @@ from sqlmodel.pool import StaticPool
 
 from backend.main import app
 from backend.common.database import get_session
-from backend.menu.models import MenuModifier
+from backend.menu.models import MenuItem, MenuItemType
 from backend.config import get_settings
 
 
@@ -55,7 +55,9 @@ class TestMenuModifierList:
         """Test listing menu modifiers with offset parameter."""
         # Create 5 menu modifiers
         for i in range(5):
-            modifier = MenuModifier(name=f"Modifier {i + 1}", price=1.99 + i)
+            modifier = MenuItem(
+                name=f"Modifier {i + 1}", price=1.99 + i, type=MenuItemType.MODIFIER
+            )
             session.add(modifier)
         session.commit()
 
@@ -73,7 +75,9 @@ class TestMenuModifierList:
         """Test listing menu modifiers respects limit parameter."""
         # Create 5 menu modifiers
         for i in range(5):
-            modifier = MenuModifier(name=f"Modifier {i + 1}", price=1.99 + i)
+            modifier = MenuItem(
+                name=f"Modifier {i + 1}", price=1.99 + i, type=MenuItemType.MODIFIER
+            )
             session.add(modifier)
         session.commit()
 
@@ -91,7 +95,9 @@ class TestMenuModifierList:
         """Test listing all menu modifiers without pagination limit."""
         # Create 5 menu modifiers
         for i in range(5):
-            modifier = MenuModifier(name=f"Modifier {i + 1}", price=1.99 + i)
+            modifier = MenuItem(
+                name=f"Modifier {i + 1}", price=1.99 + i, type=MenuItemType.MODIFIER
+            )
             session.add(modifier)
         session.commit()
 
@@ -111,7 +117,9 @@ class TestMenuModifierList:
         """Test listing menu modifiers with only offset parameter."""
         # Create 5 menu modifiers
         for i in range(5):
-            modifier = MenuModifier(name=f"Modifier {i + 1}", price=1.99 + i)
+            modifier = MenuItem(
+                name=f"Modifier {i + 1}", price=1.99 + i, type=MenuItemType.MODIFIER
+            )
             session.add(modifier)
         session.commit()
 
@@ -129,7 +137,7 @@ class TestMenuModifierRetrieve:
     ):
         """Test retrieving an existing menu modifier by ID."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Extra Cheese", price=2.50)
+        modifier = MenuItem(name="Extra Cheese", price=2.50, type=MenuItemType.MODIFIER)
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -145,7 +153,7 @@ class TestMenuModifierRetrieve:
         """Test retrieving a menu modifier that doesn't exist."""
         response = client.get("/menu/modifier/999")
         assert response.status_code == 404
-        assert "MenuModifier with ID 999 not found." in response.json()["detail"]
+        assert "MenuItem with ID 999 not found." in response.json()["detail"]
 
     def test_retrieve_multiple_menu_modifiers(
         self, client: TestClient, session: Session
@@ -159,7 +167,7 @@ class TestMenuModifierRetrieve:
 
         modifiers = []
         for name, price in modifiers_data:
-            modifier = MenuModifier(name=name, price=price)
+            modifier = MenuItem(name=name, price=price, type=MenuItemType.MODIFIER)
             session.add(modifier)
             modifiers.append(modifier)
         session.commit()
@@ -236,7 +244,9 @@ class TestMenuModifierDelete:
     def test_delete_existing_menu_modifier(self, client: TestClient, session: Session):
         """Test deleting an existing menu modifier."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Modifier to Delete", price=1.00)
+        modifier = MenuItem(
+            name="Modifier to Delete", price=1.00, type=MenuItemType.MODIFIER
+        )
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -254,14 +264,16 @@ class TestMenuModifierDelete:
         """Test deleting a menu modifier that doesn't exist."""
         response = client.delete("/menu/modifier/999")
         assert response.status_code == 404
-        assert "MenuModifier with ID 999 not found." in response.json()["detail"]
+        assert "MenuItem with ID 999 not found." in response.json()["detail"]
 
     def test_delete_multiple_menu_modifiers(self, client: TestClient, session: Session):
         """Test deleting multiple menu modifiers."""
         # Create 3 menu modifiers
         modifiers = []
         for i in range(3):
-            modifier = MenuModifier(name=f"Modifier {i}", price=1.00 + i)
+            modifier = MenuItem(
+                name=f"Modifier {i}", price=1.00 + i, type=MenuItemType.MODIFIER
+            )
             session.add(modifier)
             modifiers.append(modifier)
         session.commit()
@@ -284,7 +296,9 @@ class TestMenuModifierUpdate:
     ):
         """Test updating only the name of a menu modifier."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Original Name", price=1.00)
+        modifier = MenuItem(
+            name="Original Name", price=1.00, type=MenuItemType.MODIFIER
+        )
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -302,7 +316,9 @@ class TestMenuModifierUpdate:
     ):
         """Test updating only the price of a menu modifier."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Test Modifier", price=1.00)
+        modifier = MenuItem(
+            name="Test Modifier", price=1.00, type=MenuItemType.MODIFIER
+        )
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -320,7 +336,7 @@ class TestMenuModifierUpdate:
     ):
         """Test updating both name and price."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Original", price=1.00)
+        modifier = MenuItem(name="Original", price=1.00, type=MenuItemType.MODIFIER)
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -338,14 +354,16 @@ class TestMenuModifierUpdate:
         payload = {"name": "Updated"}
         response = client.patch("/menu/modifier/999", json=payload)
         assert response.status_code == 404
-        assert "MenuModifier with ID 999 not found." in response.json()["detail"]
+        assert "MenuItem with ID 999 not found." in response.json()["detail"]
 
     def test_partial_update_with_empty_payload(
         self, client: TestClient, session: Session
     ):
         """Test partial update with empty payload (no changes)."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Test Modifier", price=1.00)
+        modifier = MenuItem(
+            name="Test Modifier", price=1.00, type=MenuItemType.MODIFIER
+        )
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
@@ -363,7 +381,9 @@ class TestMenuModifierUpdate:
     ):
         """Test updating with invalid negative price."""
         # Create a menu modifier
-        modifier = MenuModifier(name="Test Modifier", price=1.00)
+        modifier = MenuItem(
+            name="Test Modifier", price=1.00, type=MenuItemType.MODIFIER
+        )
         session.add(modifier)
         session.commit()
         session.refresh(modifier)
