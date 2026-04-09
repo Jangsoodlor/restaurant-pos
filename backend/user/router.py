@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..common.exceptions import EntityNotFoundError
 from .models import User, UserBase, UserUpdate
-from .repository import UserRepository, get_user_repository
+from .repository import UserRepository
 
-RepoDep = Annotated[UserRepository, Depends(get_user_repository)]
+RepoDep = Annotated[UserRepository, Depends(UserRepository.from_session)]
 
 router = APIRouter(
     prefix="/user",

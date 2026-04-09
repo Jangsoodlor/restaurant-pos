@@ -10,7 +10,7 @@ from sqlmodel.pool import StaticPool
 
 # Import from the backend package properly
 from backend.main import app
-from backend.database import get_session
+from backend.common.database import get_session
 from backend.table.models import Table, TableStatus
 from backend.config import get_settings
 

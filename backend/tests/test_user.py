@@ -4,7 +4,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from backend.main import app
-from backend.database import get_session
+from backend.common.database import get_session
 
 
 @pytest.fixture(name="session")

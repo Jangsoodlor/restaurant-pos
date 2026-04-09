@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .database import create_db_and_tables
+from .common.database import create_db_and_tables
 from .user import router as user_router
 from .table import router as table_router
+from .menu import router as menu_router
 
 
 @asynccontextmanager
@@ -21,3 +22,4 @@ def read_root():
 
 app.include_router(user_router)
 app.include_router(table_router)
+app.include_router(menu_router)

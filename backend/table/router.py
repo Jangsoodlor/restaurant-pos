@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..common.exceptions import EntityNotFoundError
 from .models import Table, TableBase, TableUpdate
-from .repository import TableRepository, get_table_repository
+from .repository import TableRepository
 
-RepoDep = Annotated[TableRepository, Depends(get_table_repository)]
+RepoDep = Annotated[TableRepository, Depends(TableRepository.from_session)]
 
 router = APIRouter(
     prefix="/table",
@@ -54,7 +54,7 @@ def delete_table(
     """Delete a table by ID."""
     try:
         repo.delete(table_id)
-        return {"ok", "deleted"}
+        return {"ok": "deleted"}
     except EntityNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
 

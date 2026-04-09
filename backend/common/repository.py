@@ -1,10 +1,11 @@
 import abc
 from collections.abc import Sequence
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, ClassVar
 
 from sqlmodel import Session, SQLModel, select
 
 from .exceptions import EntityNotFoundError
+from .database import SessionDep
 
 Model = TypeVar("Model", bound=SQLModel)
 CreateDTO = TypeVar("CreateDTO", bound=SQLModel)
@@ -12,12 +13,12 @@ UpdateDTO = TypeVar("UpdateDTO", bound=SQLModel)
 
 
 class AbstractRepository(abc.ABC, Generic[Model, CreateDTO, UpdateDTO]):
+    model: ClassVar[Model]
+
     def __init__(
         self,
-        model: type[Model],
         session: Session,
     ):
-        self.model = model
         self.session = session
 
     def list(self, offset: int = 0, limit: int | None = None) -> Sequence[Model]:
@@ -68,3 +69,8 @@ class AbstractRepository(abc.ABC, Generic[Model, CreateDTO, UpdateDTO]):
         self.session.commit()
         self.session.refresh(db_entity)
         return db_entity
+
+    @classmethod
+    def from_session(cls, session: SessionDep):
+        """Get the repository for a database connection session"""
+        return cls(session)
