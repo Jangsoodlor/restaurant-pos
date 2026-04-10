@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Generic, TypeVar, ClassVar
+from typing import Generic, TypeVar, ClassVar, Any
 
 from sqlmodel import Session, SQLModel, select
 
@@ -44,7 +44,7 @@ class AbstractRepository(EventObserver, Generic[Model, CreateDTO, UpdateDTO]):
         self.session.refresh(db_entity)
         return db_entity
 
-    def create_many(self):
+    def create_many(self, *args, **kwargs) -> Sequence[Any]:
         raise NotImplementedError
 
     def delete(self, entity_id: int) -> None:

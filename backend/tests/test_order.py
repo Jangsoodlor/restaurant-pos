@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
 from backend.main import app
@@ -81,6 +81,36 @@ def modifier_fixture(session: Session):
     return modifier
 
 
+@pytest.fixture(name="order_request_payload")
+def order_request_payload_fixture(menu_item_fixture: MenuItem):
+    """Build a valid POST /order/ payload with at least one line item."""
+
+    def _build(
+        table_id: int,
+        user_id: int,
+        status: str | None = "draft",
+        order_line_items: list[dict] | None = None,
+    ) -> dict:
+        order_data = {"table_id": table_id, "user_id": user_id}
+        if status is not None:
+            order_data["status"] = status
+
+        if order_line_items is None:
+            order_line_items = [
+                {
+                    "order_id": 0,
+                    "menu_item_id": menu_item_fixture.id,
+                    "item_name": menu_item_fixture.name,
+                    "unit_price": menu_item_fixture.price,
+                    "quantity": 1,
+                }
+            ]
+
+        return {"order": order_data, "order_line_items": order_line_items}
+
+    return _build
+
+
 @pytest.fixture(name="order_fixture")
 def order_fixture(session: Session, user_fixture: User, table_fixture: Table):
     """Create a sample Order for testing."""
@@ -128,14 +158,18 @@ class TestOrderRepository:
         assert response.json() == []
 
     def test_create_order(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test creating an order."""
-        payload = {
-            "table_id": table_fixture.id,
-            "user_id": user_fixture.id,
-            "status": "draft",
-        }
+        payload = order_request_payload(
+            table_id=table_fixture.id,
+            user_id=user_fixture.id,
+            status="draft",
+        )
         response = client.post("/order/", json=payload)
         assert response.status_code == 201
         assert response.json()["status"] == "draft"
@@ -172,25 +206,29 @@ class TestOrderRepository:
         assert response.status_code == 404
 
     def test_list_with_status_filter(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test filtering orders by status."""
         # Create orders with different statuses
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_fixture.id,
-                "status": "draft",
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_fixture.id,
+                status="draft",
+            ),
         )
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_fixture.id,
-                "status": "in_progress",
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_fixture.id,
+                status="in_progress",
+            ),
         )
 
         # Filter by draft status
@@ -200,7 +238,11 @@ class TestOrderRepository:
         assert response.json()[0]["status"] == "draft"
 
     def test_list_with_table_id_filter(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test filtering orders by table_id."""
         # Create Table 2
@@ -213,17 +255,17 @@ class TestOrderRepository:
         # Create orders for different tables
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_fixture.id,
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_fixture.id,
+            ),
         )
         client.post(
             "/order/",
-            json={
-                "table_id": table_2_id,
-                "user_id": user_fixture.id,
-            },
+            json=order_request_payload(
+                table_id=table_2_id,
+                user_id=user_fixture.id,
+            ),
         )
 
         # Filter by table_id
@@ -232,7 +274,9 @@ class TestOrderRepository:
         assert len(response.json()) == 1
         assert response.json()[0]["table_id"] == table_fixture.id
 
-    def test_list_with_user_id_filter(self, client: TestClient, table_fixture: Table):
+    def test_list_with_user_id_filter(
+        self, client: TestClient, table_fixture: Table, order_request_payload
+    ):
         """Test filtering orders by user_id."""
         # Create User 2
         response = client.post("/user/", json={"name": "Chef", "role": "cook"})
@@ -245,17 +289,17 @@ class TestOrderRepository:
         # Create orders for different users
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_1_id,
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_1_id,
+            ),
         )
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_2_id,
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_2_id,
+            ),
         )
 
         # Filter by user_id
@@ -264,7 +308,9 @@ class TestOrderRepository:
         assert len(response.json()) == 1
         assert response.json()[0]["user_id"] == user_1_id
 
-    def test_list_with_multiple_filters(self, client: TestClient, table_fixture: Table):
+    def test_list_with_multiple_filters(
+        self, client: TestClient, table_fixture: Table, order_request_payload
+    ):
         """Test filtering orders with multiple filters."""
         response = client.post("/user/", json={"name": "Waiter", "role": "waiter"})
         user_id = response.json()["id"]
@@ -273,11 +319,11 @@ class TestOrderRepository:
         for i in range(3):
             client.post(
                 "/order/",
-                json={
-                    "table_id": table_fixture.id,
-                    "user_id": user_id,
-                    "status": "draft" if i < 2 else "in_progress",
-                },
+                json=order_request_payload(
+                    table_id=table_fixture.id,
+                    user_id=user_id,
+                    status="draft" if i < 2 else "in_progress",
+                ),
             )
 
         # Filter by multiple criteria
@@ -288,17 +334,21 @@ class TestOrderRepository:
         assert len(response.json()) == 2
 
     def test_list_pagination(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test pagination works correctly."""
         # Create 10 orders
         for i in range(10):
             client.post(
                 "/order/",
-                json={
-                    "table_id": table_fixture.id,
-                    "user_id": user_fixture.id,
-                },
+                json=order_request_payload(
+                    table_id=table_fixture.id,
+                    user_id=user_fixture.id,
+                ),
             )
 
         # Get first page (limit=3)
@@ -411,13 +461,20 @@ class TestOrderList:
         assert response.json() == []
 
     def test_get_orders_with_pagination(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test pagination works correctly."""
         for i in range(5):
             client.post(
                 "/order/",
-                json={"table_id": table_fixture.id, "user_id": user_fixture.id},
+                json=order_request_payload(
+                    table_id=table_fixture.id,
+                    user_id=user_fixture.id,
+                ),
             )
 
         response = client.get("/order/?offset=0&limit=2")
@@ -425,24 +482,28 @@ class TestOrderList:
         assert len(response.json()) == 2
 
     def test_get_orders_filter_by_status(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test filtering by status."""
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_fixture.id,
-                "status": "draft",
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_fixture.id,
+                status="draft",
+            ),
         )
         client.post(
             "/order/",
-            json={
-                "table_id": table_fixture.id,
-                "user_id": user_fixture.id,
-                "status": "completed",
-            },
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_fixture.id,
+                status="completed",
+            ),
         )
 
         response = client.get("/order/?status=draft")
@@ -450,7 +511,9 @@ class TestOrderList:
         assert len(response.json()) == 1
         assert response.json()[0]["status"] == "draft"
 
-    def test_get_orders_filter_by_table(self, client: TestClient, user_fixture: User):
+    def test_get_orders_filter_by_table(
+        self, client: TestClient, user_fixture: User, order_request_payload
+    ):
         """Test filtering by table_id."""
         table_resp = client.post(
             "/table/",
@@ -460,21 +523,29 @@ class TestOrderList:
 
         client.post(
             "/order/",
-            json={"table_id": table_id, "user_id": user_fixture.id},
+            json=order_request_payload(
+                table_id=table_id,
+                user_id=user_fixture.id,
+            ),
         )
 
         response = client.get(f"/order/?table_id={table_id}")
         assert response.status_code == 200
         assert len(response.json()) == 1
 
-    def test_get_orders_filter_by_user(self, client: TestClient, table_fixture: Table):
+    def test_get_orders_filter_by_user(
+        self, client: TestClient, table_fixture: Table, order_request_payload
+    ):
         """Test filtering by user_id."""
         user_resp = client.post("/user/", json={"name": "Waiter", "role": "waiter"})
         user_id = user_resp.json()["id"]
 
         client.post(
             "/order/",
-            json={"table_id": table_fixture.id, "user_id": user_id},
+            json=order_request_payload(
+                table_id=table_fixture.id,
+                user_id=user_id,
+            ),
         )
 
         response = client.get(f"/order/?user_id={user_id}")
@@ -486,23 +557,90 @@ class TestOrderCreate:
     """Test suite for POST /order/ endpoint."""
 
     def test_post_order_success(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        session: Session,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test creating an order successfully."""
-        payload = {"table_id": table_fixture.id, "user_id": user_fixture.id}
+        payload = order_request_payload(
+            table_id=table_fixture.id,
+            user_id=user_fixture.id,
+            status=None,
+        )
         response = client.post("/order/", json=payload)
         assert response.status_code == 201
         assert "id" in response.json()
         assert response.json()["status"] == "draft"
+        order_id = response.json()["id"]
+        line_items = session.exec(
+            select(OrderLineItem).where(OrderLineItem.order_id == order_id)
+        ).all()
+        assert len(line_items) == 1
 
     def test_post_order_sets_draft_status(
-        self, client: TestClient, user_fixture: User, table_fixture: Table
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
     ):
         """Test that orders default to DRAFT status."""
-        payload = {"table_id": table_fixture.id, "user_id": user_fixture.id}
+        payload = order_request_payload(
+            table_id=table_fixture.id,
+            user_id=user_fixture.id,
+            status=None,
+        )
         response = client.post("/order/", json=payload)
         assert response.status_code == 201
         assert response.json()["status"] == "draft"
+
+    def test_post_order_rejects_empty_line_items(
+        self,
+        client: TestClient,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
+    ):
+        """Test creating an order fails when no line items are provided."""
+        payload = order_request_payload(
+            table_id=table_fixture.id,
+            user_id=user_fixture.id,
+            order_line_items=[],
+        )
+        response = client.post("/order/", json=payload)
+        assert response.status_code == 422
+
+    def test_post_order_rolls_back_when_create_many_fails(
+        self,
+        client: TestClient,
+        session: Session,
+        user_fixture: User,
+        table_fixture: Table,
+        order_request_payload,
+        monkeypatch,
+    ):
+        """Test order is deleted when create_many raises an exception."""
+
+        def raise_create_many_error(*_args, **_kwargs):
+            raise RuntimeError("create_many failed")
+
+        monkeypatch.setattr(
+            "backend.order.repositories.order_line_item_repository.OrderLineItemRepository.create_many",
+            raise_create_many_error,
+        )
+
+        payload = order_request_payload(
+            table_id=table_fixture.id,
+            user_id=user_fixture.id,
+        )
+
+        with pytest.raises(RuntimeError, match="create_many failed"):
+            client.post("/order/", json=payload)
+
+        assert session.exec(select(Order)).all() == []
 
 
 class TestOrderRetrieve:

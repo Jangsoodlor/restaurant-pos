@@ -1,15 +1,18 @@
 from collections.abc import Sequence
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from ..common.exceptions import EntityNotFoundError
-from .models.order import OrderCreate, OrderUpdate
-from .models.order_status import OrderStatus
+from .models import OrderCreate, OrderUpdate, OrderStatus, OrderLineItemCreate
 from .models.tables import Order
-from .repositories.order_repository import OrderRepository
+from .repositories import OrderRepository
+from .repositories import OrderLineItemRepository
 
-RepoDep = Annotated[OrderRepository, Depends(OrderRepository.from_session)]
+OrderRepoDep = Annotated[OrderRepository, Depends(OrderRepository.from_session)]
+OrderLineItemRepoDep = Annotated[
+    OrderLineItemRepository, Depends(OrderLineItemRepository.from_session)
+]
 
 router = APIRouter(
     prefix="/order",
@@ -19,7 +22,7 @@ router = APIRouter(
 
 @router.get("/")
 def list_orders(
-    repo: RepoDep,
+    repo: OrderRepoDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
     status: OrderStatus | None = None,
@@ -35,7 +38,7 @@ def list_orders(
 @router.get("/{order_id}")
 def retrieve_order(
     order_id: int,
-    repo: RepoDep,
+    repo: OrderRepoDep,
 ) -> Order:
     """Get a single order by ID."""
     try:
@@ -47,16 +50,37 @@ def retrieve_order(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_order(
     order: OrderCreate,
-    repo: RepoDep,
+    order_line_items: Annotated[Sequence[OrderLineItemCreate], Body(min_length=1)],
+    order_repo: OrderRepoDep,
+    order_line_item_repo: OrderLineItemRepoDep,
 ) -> Order:
     """Create a new order."""
-    return repo.create(order)
+    created_order = order_repo.create(order)
+    line_items_for_order = [
+        OrderLineItemCreate(
+            **line_item.model_dump(exclude={"order_id"}),
+            order_id=created_order.id,
+        )
+        for line_item in order_line_items
+    ]
+
+    try:
+        order_line_item_repo.create_many(line_items_for_order)
+    except Exception:
+        # Roll back created order if line item creation fails.
+        try:
+            order_repo.delete(created_order.id)
+        except EntityNotFoundError:
+            pass
+        raise
+
+    return order_repo.retrieve(created_order.id)
 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_order(
     order_id: int,
-    repo: RepoDep,
+    repo: OrderRepoDep,
 ):
     """Delete an order by ID."""
     try:
@@ -70,7 +94,7 @@ def delete_order(
 def partial_update_order(
     order_id: int,
     order: OrderUpdate,
-    repo: RepoDep,
+    repo: OrderRepoDep,
 ):
     """Partially update an order (only provided fields)."""
     try:

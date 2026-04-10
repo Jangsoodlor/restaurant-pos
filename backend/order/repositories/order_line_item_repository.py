@@ -39,6 +39,14 @@ class OrderLineItemRepository(
 
         return db_entity
 
+    def create_many(
+        self, entities: Sequence[OrderLineItemCreate]
+    ) -> Sequence[OrderLineItem]:
+        created_order_line_items = []
+        for order_line_item in entities:
+            created_order_line_items.append(self.create(order_line_item))
+        return created_order_line_items
+
     def patch(self, entity_id: int, entity: OrderLineItemUpdate) -> OrderLineItem:
         """Update line item and sync modifiers if modifier_ids provided."""
         db_entity = self.session.get(self.model, entity_id)

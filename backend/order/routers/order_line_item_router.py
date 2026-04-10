@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from ...common.exceptions import EntityNotFoundError
 from ..models.order_line_item import OrderLineItemCreate, OrderLineItemUpdate
 from ..models.tables import OrderLineItem
-from ..repositories.order_line_item_repository import OrderLineItemRepository
-from ..repositories.order_repository import OrderRepository
+from ..repositories import OrderLineItemRepository
+from ..repositories import OrderRepository
 
 LineItemRepoDep = Annotated[
     OrderLineItemRepository, Depends(OrderLineItemRepository.from_session)
