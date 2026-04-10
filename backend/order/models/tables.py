@@ -6,6 +6,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from ...table import Table
 from ...user import User
 from .order_status import OrderStatus
+from ...menu import MenuItem
 
 
 class Order(SQLModel, table=True):
@@ -60,7 +61,3 @@ class OrderLineItem(SQLModel, table=True):
     def subtotal(self) -> float:
         modifier_total = sum(m.price for m in self.modifiers)
         return (self.unit_price + modifier_total) * self.quantity
-
-
-# Import MenuItem here to avoid circular imports in schemas
-from ...menu import MenuItem  # noqa: E402

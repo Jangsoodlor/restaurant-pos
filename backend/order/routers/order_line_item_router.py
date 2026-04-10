@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from ...common.exceptions import EntityNotFoundError
+from ...common import EntityNotFoundError
 from ..models.order_line_item import OrderLineItemCreate, OrderLineItemUpdate
 from ..models.tables import OrderLineItem
 from ..repositories import OrderLineItemRepository
@@ -15,8 +15,7 @@ LineItemRepoDep = Annotated[
 OrderRepoDep = Annotated[OrderRepository, Depends(OrderRepository.from_session)]
 
 router = APIRouter(
-    prefix="/order/{order_id}/line-items",
-    tags=["order-line-items"],
+    prefix="/{order_id}/line-items",
 )
 
 
@@ -32,7 +31,7 @@ def list_line_items(
     # Verify order exists
     try:
         order_repo.retrieve(order_id)
-    except EntityNotFoundError as e:
+    except EntityNotFoundError:
         raise HTTPException(status_code=404, detail=f"Order {order_id} not found")
 
     return repo.list(offset=offset, limit=limit)
@@ -69,7 +68,7 @@ def create_line_item(
     # Verify order exists
     try:
         order_repo.retrieve(order_id)
-    except EntityNotFoundError as e:
+    except EntityNotFoundError:
         raise HTTPException(status_code=404, detail=f"Order {order_id} not found")
 
     # Verify the order_id in the payload matches the URL parameter

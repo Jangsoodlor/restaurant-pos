@@ -2,8 +2,7 @@ from collections.abc import Sequence
 
 from sqlmodel import select
 
-from ...common.repository import AbstractRepository
-from ...common.exceptions import EntityNotFoundError
+from ...common import AbstractRepository
 from ..models.order import OrderCreate, OrderUpdate
 from ..models.order_status import OrderStatus
 from ..models.tables import Order

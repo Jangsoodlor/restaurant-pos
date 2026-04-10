@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from ..common.exceptions import EntityNotFoundError
+from ..common import EntityNotFoundError
 from .models import User, UserBase, UserUpdate
 from .repository import UserRepository
 

@@ -3,42 +3,10 @@ Comprehensive tests for the /table endpoint using FastAPI TestClient.
 Tests all CRUD operations and edge cases.
 """
 
-import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, create_engine, SQLModel
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session
 
-# Import from the backend package properly
-from backend.main import app
-from backend.common.database import get_session
 from backend.table.models import Table, TableStatus
-from backend.config import get_settings
-
-
-@pytest.fixture(name="session")
-def session_fixture():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine(
-        get_settings().database_url,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    """Create a TestClient with a test database session."""
-
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
 
 
 class TestTableList:

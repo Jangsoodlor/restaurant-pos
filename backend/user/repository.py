@@ -1,4 +1,4 @@
-from ..common.repository import AbstractRepository
+from ..common import AbstractRepository
 from .models import User, UserBase, UserUpdate
 
 

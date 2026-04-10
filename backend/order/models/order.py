@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import SQLModel
 
 from .order_status import OrderStatus
 

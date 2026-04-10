@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from sqlmodel import select
-from ..common.repository import AbstractRepository
+from ..common import AbstractRepository, EntityNotFoundError
 from .models import (
     MenuBase,
     MenuItem,
@@ -43,8 +43,6 @@ class MenuItemRepository(
         """Update only the provided fields of a menu item. Type cannot be changed."""
         db_entity = self.session.get(self.model, entity_id)
         if not db_entity:
-            from ..common.exceptions import EntityNotFoundError
-
             raise EntityNotFoundError(
                 entity_name=self.model.__name__,
                 entity_id=entity_id,
@@ -92,8 +90,6 @@ class MenuModifierRepository(
         """Update only the provided fields of a menu modifier. Type cannot be changed."""
         db_entity = self.session.get(self.model, entity_id)
         if not db_entity:
-            from ..common.exceptions import EntityNotFoundError
-
             raise EntityNotFoundError(
                 entity_name=self.model.__name__,
                 entity_id=entity_id,

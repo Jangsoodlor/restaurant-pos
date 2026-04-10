@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .common.database import create_db_and_tables
-from .user import router as user_router
-from .table import router as table_router
-from .menu import router as menu_router
-from .order import router as order_router
-from .order.routers import order_line_item_router
+from .common import create_db_and_tables
+from .user import user_router
+from .table import table_router
+from .menu import menu_router
+from .order import order_router
 
 
 @asynccontextmanager
@@ -26,4 +25,3 @@ app.include_router(user_router)
 app.include_router(table_router)
 app.include_router(menu_router)
 app.include_router(order_router)
-app.include_router(order_line_item_router)

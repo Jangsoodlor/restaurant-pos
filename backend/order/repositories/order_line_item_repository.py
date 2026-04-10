@@ -1,9 +1,8 @@
 from collections.abc import Sequence
 
-from sqlmodel import Session, select
+from sqlmodel import select
 
-from ...common.repository import AbstractRepository
-from ...common.exceptions import EntityNotFoundError
+from ...common import AbstractRepository, EntityNotFoundError
 from ..models.order_line_item import (
     OrderLineItemCreate,
     OrderLineItemUpdate,
