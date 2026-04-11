@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..common import EntityNotFoundError
-from .models import User, UserBase, UserUpdate
+from .models import User, UserBase, UserUpdate, Role
 from .repository import UserRepository
 
 RepoDep = Annotated[UserRepository, Depends(UserRepository.from_session)]
@@ -20,9 +20,10 @@ def list_users(
     repo: RepoDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
+    role: Role | None = Query(None),
 ) -> Sequence[User]:
     """Get all users with pagination."""
-    return repo.list(offset, limit)
+    return repo.list(offset, limit, role=role)
 
 
 @router.get("/{user_id}")

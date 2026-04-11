@@ -54,6 +54,20 @@ class TestUserList:
         response = client.get("/user/?limit=101")
         assert response.status_code == 422  # Validation error
 
+    def test_list_with_role_filter(self, client: TestClient):
+        """Test filtering users by role."""
+        # Create users with different roles
+        client.post("/user/", json={"name": "Alice", "role": "waiter"})
+        client.post("/user/", json={"name": "Bob", "role": "cook"})
+        client.post("/user/", json={"name": "Carol", "role": "waiter"})
+
+        response = client.get("/user/?role=waiter")
+        assert response.status_code == 200
+        data = response.json()
+        # Expect only the two waiters
+        assert len(data) == 2
+        assert all(u["role"] == "waiter" for u in data)
+
 
 class TestUserRetrieve:
     """Test suite for GET /user/{user_id} endpoint."""

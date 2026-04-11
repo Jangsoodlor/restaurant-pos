@@ -1,0 +1,9 @@
+name: user-list-by-role
+title: Accept user role as filter parameter for UserRepository.list and GET /user/
+description: |
+  Add optional `role` parameter to `UserRepository.list` and the `GET /user/` endpoint
+  so callers can filter users by role. Mirrors the existing filtering pattern used
+  by `OrderRepository.list` (status, table_id, user_id).
+apply:
+  requires:
+    - tasks
