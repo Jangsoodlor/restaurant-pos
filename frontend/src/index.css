@@ -1,3 +1,17 @@
 :root {
   color-scheme: light dark;
+
+  /* Light mode backgrounds */
+  --bg-table-available: #e8f5e9;
+  --bg-table-occupied: #ffebee;
+  --bg-table-reserved: #fffde7;
+}
+
+/* Dark mode backgrounds */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-table-available: #1b5e20;
+    --bg-table-occupied: #b71c1c;
+    --bg-table-reserved: #f57f17;
+  }
 }

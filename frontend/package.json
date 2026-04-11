@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --hot src/index.tsx",
     "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
-    "start": "NODE_ENV=production bun src/index.tsx"
+    "start": "NODE_ENV=production bun src/index.tsx",
+    "test": "bun test"
   },
   "dependencies": {
     "@tanstack/eslint-plugin-query": "^5.97.0",
@@ -17,8 +18,12 @@
     "wouter": "^3.9.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/bun": "latest",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/bun": "latest"
+    "happy-dom": "^20.8.9"
   }
 }

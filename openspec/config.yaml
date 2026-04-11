@@ -4,10 +4,18 @@ schema: spec-driven
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
 # Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack:
+    Backend: FastAPI + sqlmodel
+    Frontend: Bun + React (Typescript) + Beercss + TanStack Query.
+  API Style: RESTful, documented in <backend_url>/openapi.json.
+  Testing: Use pytest for backend testing, native bun test for frontend
+  Others:
+    1. There is a Makefile in backend, use it to run development server, tests, linting, etc. in the backend.
+    2. The stub folder in frontend is generated using openapi-generator-api, DO NOT EDIT IT in any circumstances.
+    3. I see that you're very bad with Beercss so here's more documentations (list from more useful to least useful):
+      - https://github.com/beercss/beercss/tree/main/docs
+      - https://www.beercss.com/
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
