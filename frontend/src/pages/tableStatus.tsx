@@ -3,21 +3,22 @@ import { useTables } from '@/hooks/useTable';
 export function TableStatus() {
   const { data: tables, isPending, error } = useTables();
 
-  if (isPending) return <p>Loading tables...</p>;
-  if (error) return <p>Error loading tables: {error.message}</p>;
+  if (isPending) return <progress className="circle medium"></progress>;
+  if (error) return <article className="round border red-text">Error loading tables: {error.message}</article>;
 
   return (
-    <div>
-      <h1>Restaurant Table Status</h1>
-      <div style={{ display: 'flex', gap: '1rem' }}>
+    <section>
+      <h4>Restaurant Table Status</h4>
+      <div className="grid">
         {tables?.map(table => (
-          <div key={table.id} style={{ border: '1px solid black', padding: '1rem' }}>
-            <h3>Table {table.tableName}</h3>
-            <p>Status: {table.status}</p>
-            {/* Example: "Available", "Occupied", "Needs Cleaning" */}
-          </div>
+          <article key={table.id} className="s12 m6 l4 round border">
+            <h6>Table {table.tableName}</h6>
+            <p className="no-margin">
+              <span className="bold">Status:</span> {table.status}
+            </p>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
