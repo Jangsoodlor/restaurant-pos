@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { tableApiClient } from '../api/client'; // Assuming you exported a TableApi instance
+import { tableApiClient } from '../api/client';
 
 export const useTables = () => {
   return useQuery({
