@@ -1,24 +1,34 @@
-import { Users } from "./APITester";
-import "./index.css";
-
-import logo from "./logo.svg";
-import reactLogo from "./react.svg";
+// src/App.tsx
+import { Link, Route, Switch } from 'wouter';
+import { TableStatus } from '@/pages/tableStatus';
+import { Home } from '@/pages/Home'
 
 export function App() {
   return (
-    <div className="app">
-      <div className="logo-container">
-        <img src={logo} alt="Bun Logo" className="logo bun-logo" />
-        <img src={reactLogo} alt="React Logo" className="logo react-logo" />
-      </div>
+    <div>
+      {/* A simple navigation menu */}
+      <nav>
+        {/* Note: Wouter uses 'href' instead of 'to' */}
+        <Link href="/">
+          Home (API Tester)
+        </Link>
+        <Link href="/tables">
+          Table Status
+        </Link>
+      </nav>
 
-      <h1>Bun + React</h1>
-      <p>
-        Edit <code>src/App.tsx</code> and save to test HMR
-      </p>
-      <Users />
+      {/* The Switch ensures only the first matching route is rendered */}
+      <main>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/tables" component={TableStatus} />
+
+          {/* Default fallback route if nothing matches (404) */}
+          <Route>
+            <h2>404 - Page Not Found</h2>
+          </Route>
+        </Switch>
+      </main>
     </div>
   );
 }
-
-export default App;
