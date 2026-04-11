@@ -1,4 +1,5 @@
 import type { Table } from '@/api/stub/models';
+import { ActionMenu } from './ActionMenu';
 
 type TableCardProps = {
   table: Table;
@@ -25,38 +26,12 @@ export function TableCard({ table, onEdit, onDelete, disabled = false }: TableCa
         overflowWrap: 'anywhere',
       }}
     >
-      <details style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}>
-        <summary className="none"> {/* "none" removes the default arrow in some versions */}
-          <button
-            type="button"
-            className="circle transparent"
-            disabled={disabled}
-            aria-label={`Table actions for ${table.tableName}`}
-          >
-            <i>more_vert</i> {/* Beer CSS usually uses Material Icons; '⋮' works too */}
-          </button>
-        </summary>
-
-        {/* Adding 'dropdown' and 'right' classes is the magic trick */}
-        <menu className="dropdown right">
-          <button
-            type="button"
-            className="transparent"
-            onClick={() => onEdit(table)}
-            disabled={disabled}
-          >
-            <i>edit</i>
-          </button>
-          <button
-            type="button"
-            className="transparent error-text"
-            onClick={() => onDelete(table.id!)}
-            disabled={disabled}
-          >
-            <i>delete</i>
-          </button>
-        </menu>
-      </details>
+      <ActionMenu
+        onEdit={() => onEdit(table)}
+        onDelete={() => onDelete(table.id!)}
+        disabled={disabled}
+        ariaLabel={`Table actions for ${table.tableName}`}
+      />
       <h6 style={{ marginRight: '2.5rem', marginTop: 0 }}>Table {table.tableName}</h6>
       <p className="no-margin">
         <span className="bold">Status:</span> {table.status}

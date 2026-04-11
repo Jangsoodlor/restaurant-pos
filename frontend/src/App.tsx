@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Link, Route, Switch, useLocation } from "wouter";
 import { TableStatus } from '@/pages/tableStatus';
 import { Home } from '@/pages/Home'
+import UserManagementPage from '@/pages/User';
 import { ui } from "beercss";
 
 export function App() {
@@ -23,6 +24,9 @@ export function App() {
           <Link className={`button transparent ${location === "/tables" ? "active" : ""}`} href="/tables">
             Table Status
           </Link>
+          <Link className={`button transparent ${location === "/user" ? "active" : ""}`} href="/user">
+            User Management
+          </Link>
         </nav>
       </header>
 
@@ -31,6 +35,7 @@ export function App() {
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/tables" component={TableStatus} />
+            <Route path="/user" component={UserManagementPage} />
 
             <Route>
               <h5>404 - Page Not Found</h5>
