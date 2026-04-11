@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { userApiClient } from '../api/client';
-import type { User, Role } from '../api/stub/models';
+import type { User, Role, UserBase, UserUpdate } from '../api/stub/models';
 
 export function useUser() {
   const queryClient = useQueryClient();
@@ -43,6 +43,24 @@ export function useUser() {
     },
   });
 
+  // Handle Create
+  const createMutation = useMutation({
+    mutationFn: (userBase: UserBase) =>
+      userApiClient.createUserUserPost({ userBase }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  // Handle Update
+  const updateMutation = useMutation({
+    mutationFn: ({ userId, userUpdate }: { userId: number; userUpdate: UserUpdate }) =>
+      userApiClient.partialUpdateUserUserUserIdPatch({ userId, userUpdate }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
   return {
     users: processedUsers,
     isLoading,
@@ -54,5 +72,12 @@ export function useUser() {
     setSortOrder,
     deleteUser: deleteMutation.mutate,
     isDeleting: deleteMutation.isPending,
+    deleteError: deleteMutation.error,
+    createUser: createMutation.mutate,
+    isCreating: createMutation.isPending,
+    createError: createMutation.error,
+    updateUser: updateMutation.mutate,
+    isUpdating: updateMutation.isPending,
+    updateError: updateMutation.error,
   };
 }

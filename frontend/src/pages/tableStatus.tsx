@@ -2,10 +2,37 @@ import { useState } from 'react';
 import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from '@/hooks/useTable';
 import type { Table, TableBase, TableUpdate, TableStatus as TableStatusEnum } from '@/api/stub/models';
 import { TableCard } from '@/components/TableCard';
-import { TableForm, type TableFormData } from '@/components/TableForm';
-import { TableDeleteDialog } from '@/components/TableDeleteDialog';
+import { EntityForm, type FormField } from '@/components/EntityForm';
+import { DeleteDialog } from '@/components/DeleteDialog';
 
 type InteractionMode = 'idle' | 'creating' | 'editing';
+
+// Field descriptors for table entity
+const TABLE_FIELDS: FormField[] = [
+  {
+    name: 'tableName',
+    label: 'Table Name',
+    type: 'text',
+    required: true,
+  },
+  {
+    name: 'capacity',
+    label: 'Capacity',
+    type: 'number',
+    required: true,
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'select',
+    required: true,
+    options: [
+      { label: 'Available', value: 'available' },
+      { label: 'Occupied', value: 'occupied' },
+      { label: 'Reserved', value: 'reserved' },
+    ],
+  },
+];
 
 export function TableStatus() {
   const { data: tables, isPending, error } = useTables();
@@ -15,7 +42,7 @@ export function TableStatus() {
 
   const [mode, setMode] = useState<InteractionMode>('idle');
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<TableFormData>({
+  const [formValues, setFormValues] = useState<Record<string, any>>({
     tableName: '',
     capacity: 1,
     status: 'available' as TableStatusEnum,
@@ -25,14 +52,14 @@ export function TableStatus() {
 
   const handleCreateClick = () => {
     setSelectedTableId(null);
-    setFormData({ tableName: '', capacity: 1, status: 'available' as TableStatusEnum });
+    setFormValues({ tableName: '', capacity: 1, status: 'available' as TableStatusEnum });
     setFormError(null);
     setMode('creating');
   };
 
   const handleEditClick = (table: Table) => {
     setSelectedTableId(table.id!);
-    setFormData({
+    setFormValues({
       tableName: table.tableName,
       capacity: table.capacity,
       status: table.status,
@@ -42,11 +69,11 @@ export function TableStatus() {
   };
 
   const validateForm = (): boolean => {
-    if (!formData.tableName.trim()) {
+    if (!formValues.tableName?.toString().trim()) {
       setFormError('Table name is required');
       return false;
     }
-    if (formData.capacity < 1) {
+    if (formValues.capacity < 1) {
       setFormError('Capacity must be at least 1');
       return false;
     }
@@ -61,17 +88,17 @@ export function TableStatus() {
     try {
       if (mode === 'creating') {
         const tableBase: TableBase = {
-          tableName: formData.tableName,
-          capacity: formData.capacity,
-          status: formData.status,
+          tableName: formValues.tableName,
+          capacity: formValues.capacity,
+          status: formValues.status,
         };
         await createMutation.mutateAsync(tableBase);
         setMode('idle');
       } else if (mode === 'editing' && selectedTableId) {
         const tableUpdate: TableUpdate = {
-          tableName: formData.tableName,
-          capacity: formData.capacity,
-          status: formData.status,
+          tableName: formValues.tableName,
+          capacity: formValues.capacity,
+          status: formValues.status,
         };
         await updateMutation.mutateAsync({ tableId: selectedTableId, tableUpdate });
         setMode('idle');
@@ -85,7 +112,7 @@ export function TableStatus() {
   const handleCancel = () => {
     setMode('idle');
     setSelectedTableId(null);
-    setFormData({ tableName: '', capacity: 1, status: 'available' as TableStatusEnum });
+    setFormValues({ tableName: '', capacity: 1, status: 'available' as TableStatusEnum });
     setFormError(null);
     setDeleteConfirmTableId(null);
   };
@@ -122,12 +149,14 @@ export function TableStatus() {
 
       {/* Create/Edit Mode Form */}
       {(mode === 'creating' || mode === 'editing') && (
-        <TableForm
+        <EntityForm
           mode={mode}
-          formData={formData}
+          title={mode === 'creating' ? 'Create New Table' : 'Edit Table'}
+          fields={TABLE_FIELDS}
+          values={formValues}
           isLoading={isLoading}
           errorMessage={formErrorMessage}
-          onChange={setFormData}
+          onChange={setFormValues}
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
         />
@@ -135,8 +164,8 @@ export function TableStatus() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmTableId && (
-        <TableDeleteDialog
-          tableName={tables?.find(t => t.id === deleteConfirmTableId)?.tableName}
+        <DeleteDialog
+          itemName={tables?.find(t => t.id === deleteConfirmTableId)?.tableName}
           isPending={deleteMutation.isPending}
           errorMessage={deleteMutation.error?.message}
           onConfirm={handleConfirmDelete}
