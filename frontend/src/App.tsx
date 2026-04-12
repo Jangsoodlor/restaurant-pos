@@ -27,6 +27,9 @@ export function App() {
           <Link className={`button transparent ${location === "/user" ? "active" : ""}`} href="/user">
             User Management
           </Link>
+          <Link className={`button transparent ${location === "/menu" ? "active" : ""}`} href="/menu">
+            Menu
+          </Link>
         </nav>
       </header>
 
@@ -36,6 +39,7 @@ export function App() {
             <Route path="/" component={Home} />
             <Route path="/tables" component={TableStatus} />
             <Route path="/user" component={UserManagementPage} />
+            <Route path="/menu" component={require('./pages/Menu').default} />
 
             <Route>
               <h5>404 - Page Not Found</h5>
