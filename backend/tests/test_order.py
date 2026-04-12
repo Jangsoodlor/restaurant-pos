@@ -58,10 +58,14 @@ def order_request_payload_fixture(menu_item_fixture: MenuItem):
         user_id: int,
         status: str | None = "draft",
         order_line_items: list[dict] | None = None,
+        notes: str | None = None,
     ) -> dict:
         order_data = {"table_id": table_id, "user_id": user_id}
         if status is not None:
             order_data["status"] = status
+
+        if notes is not None:
+            order_data["notes"] = notes
 
         if order_line_items is None:
             order_line_items = [

@@ -5,6 +5,7 @@ schema: spec-driven
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
 # Example:
 context: |
+  This is a restaurant Point-of-Sales software. The users of this software are cooks, restaurant chefs, and 
   Tech stack:
     Backend: FastAPI + sqlmodel
     Frontend: Bun + React (Typescript) + Beercss + TanStack Query.

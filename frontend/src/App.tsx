@@ -4,6 +4,8 @@ import { Link, Route, Switch, useLocation } from "wouter";
 import { TableStatus } from '@/pages/tableStatus';
 import { Home } from '@/pages/Home'
 import UserManagementPage from '@/pages/User';
+import ViewOrder from '@/pages/viewOrder';
+import CreateOrder from '@/pages/createOrder';
 import { ui } from "beercss";
 
 export function App() {
@@ -30,6 +32,9 @@ export function App() {
           <Link className={`button transparent ${location === "/menu" ? "active" : ""}`} href="/menu">
             Menu
           </Link>
+          <Link className={`button transparent ${location === "/orders" ? "active" : ""}`} href="/orders">
+            Orders
+          </Link>
         </nav>
       </header>
 
@@ -40,6 +45,8 @@ export function App() {
             <Route path="/tables" component={TableStatus} />
             <Route path="/user" component={UserManagementPage} />
             <Route path="/menu" component={require('./pages/Menu').default} />
+            <Route path="/orders/create" component={CreateOrder} />
+            <Route path="/orders" component={ViewOrder} />
 
             <Route>
               <h5>404 - Page Not Found</h5>

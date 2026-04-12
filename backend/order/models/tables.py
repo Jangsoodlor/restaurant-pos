@@ -25,6 +25,7 @@ class Order(SQLModel, table=True):
     table: "Table" = Relationship()
     user: "User" = Relationship()
     line_items: list["OrderLineItem"] = Relationship(back_populates="order")
+    notes: str | None = Field(default=None, max_length=500)
 
     @property
     def total(self) -> float:

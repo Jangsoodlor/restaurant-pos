@@ -10,6 +10,7 @@ class OrderLineItemCreate(SQLModel):
     unit_price: float
     quantity: int = Field(default=1, ge=1)
     modifier_ids: list[int] = Field(default_factory=list)
+    notes: str | None = Field(default=None, max_length=500)
 
 
 class OrderLineItemUpdate(SQLModel):
@@ -19,3 +20,4 @@ class OrderLineItemUpdate(SQLModel):
     unit_price: float | None = None
     item_name: str | None = None
     modifier_ids: list[int] | None = None
+    notes: str | None = Field(default=None, max_length=500)
