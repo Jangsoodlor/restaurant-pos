@@ -74,45 +74,43 @@ export default function Menu() {
         )}
       </div>
 
-      {formOpen && (
-        <EntityForm
-          mode={editing ? 'editing' : 'creating'}
-          title={editing ? 'Edit' : 'Create'}
-          fields={fields}
-          values={formValues}
-          isLoading={(activeTab === 'items' ? itemsHook.isCreating || itemsHook.isUpdating : modifiersHook.isCreating || modifiersHook.isUpdating)}
-          onChange={(v) => setFormValues(v)}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const payload = { name: formValues.name, price: Number(formValues.price) };
-            if (editing) {
-              if (activeTab === 'items') itemsHook.updateItem({ menuItemId: editing.id, menuUpdate: payload });
-              else modifiersHook.updateModifier({ modifierId: editing.id, menuUpdate: payload });
-            } else {
-              if (activeTab === 'items') itemsHook.createItem(payload);
-              else modifiersHook.createModifier(payload);
-            }
+      <EntityForm
+        mode={editing ? 'editing' : 'creating'}
+        title={editing ? 'Edit' : 'Create'}
+        fields={fields}
+        values={formValues}
+        isLoading={(activeTab === 'items' ? itemsHook.isCreating || itemsHook.isUpdating : modifiersHook.isCreating || modifiersHook.isUpdating)}
+        isOpen={formOpen}
+        onChange={(v) => setFormValues(v)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const payload = { name: formValues.name, price: Number(formValues.price) };
+          if (editing) {
+            if (activeTab === 'items') itemsHook.updateItem({ menuItemId: editing.id, menuUpdate: payload });
+            else modifiersHook.updateModifier({ modifierId: editing.id, menuUpdate: payload });
+          } else {
+            if (activeTab === 'items') itemsHook.createItem(payload);
+            else modifiersHook.createModifier(payload);
+          }
 
-            setFormOpen(false);
-            setEditing(null);
-            setFormValues({ name: '', price: '' });
-          }}
-          onCancel={() => { setFormOpen(false); setEditing(null); setFormValues({ name: '', price: '' }); }}
-        />
-      )}
+          setFormOpen(false);
+          setEditing(null);
+          setFormValues({ name: '', price: '' });
+        }}
+        onCancel={() => { setFormOpen(false); setEditing(null); setFormValues({ name: '', price: '' }); }}
+      />
 
-      {deleteTarget && (
-        <DeleteDialog
-          itemName={deleteTarget.name}
-          isPending={activeTab === 'items' ? itemsHook.isDeleting : modifiersHook.isDeleting}
-          onConfirm={() => {
-            if (activeTab === 'items') itemsHook.deleteItem(deleteTarget.id);
-            else modifiersHook.deleteModifier(deleteTarget.id);
-            setDeleteTarget(null);
-          }}
-          onCancel={() => setDeleteTarget(null)}
-        />
-      )}
+      <DeleteDialog
+        itemName={deleteTarget?.name}
+        isPending={activeTab === 'items' ? itemsHook.isDeleting : modifiersHook.isDeleting}
+        isOpen={!!deleteTarget}
+        onConfirm={() => {
+          if (activeTab === 'items') itemsHook.deleteItem(deleteTarget!.id);
+          else modifiersHook.deleteModifier(deleteTarget!.id);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </section>
   );
 }

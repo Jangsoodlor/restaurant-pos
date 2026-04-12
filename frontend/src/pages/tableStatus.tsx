@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from '@/hooks/useTable';
 import type { Table, TableBase, TableUpdate, TableStatus as TableStatusEnum } from '@/api/stub/models';
 import { TableCard } from '@/components/TableCard';
-import { EntityForm, type FormField } from '@/components/EntityForm';
+import { EntityForm, type FormField, type InteractionMode as FormMode } from '@/components/EntityForm';
 import { DeleteDialog } from '@/components/DeleteDialog';
 
-type InteractionMode = 'idle' | 'creating' | 'editing';
+type InteractionMode = 'idle' | FormMode;
 
 // Field descriptors for table entity
 const TABLE_FIELDS: FormField[] = [
@@ -148,30 +148,28 @@ export function TableStatus() {
       <h4>Restaurant Table Status</h4>
 
       {/* Create/Edit Mode Form */}
-      {(mode === 'creating' || mode === 'editing') && (
-        <EntityForm
-          mode={mode}
-          title={mode === 'creating' ? 'Create New Table' : 'Edit Table'}
-          fields={TABLE_FIELDS}
-          values={formValues}
-          isLoading={isLoading}
-          errorMessage={formErrorMessage}
-          onChange={setFormValues}
-          onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-        />
-      )}
+      <EntityForm
+        mode={mode as FormMode}
+        title={mode === 'creating' ? 'Create New Table' : 'Edit Table'}
+        fields={TABLE_FIELDS}
+        values={formValues}
+        isLoading={isLoading}
+        isOpen={mode === 'creating' || mode === 'editing'}
+        errorMessage={formErrorMessage}
+        onChange={setFormValues}
+        onSubmit={handleFormSubmit}
+        onCancel={handleCancel}
+      />
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirmTableId && (
-        <DeleteDialog
-          itemName={tables?.find(t => t.id === deleteConfirmTableId)?.tableName}
-          isPending={deleteMutation.isPending}
-          errorMessage={deleteMutation.error?.message}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setDeleteConfirmTableId(null)}
-        />
-      )}
+      <DeleteDialog
+        itemName={tables?.find(t => t.id === deleteConfirmTableId)?.tableName}
+        isPending={deleteMutation.isPending}
+        isOpen={!!deleteConfirmTableId}
+        errorMessage={deleteMutation.error?.message}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirmTableId(null)}
+      />
 
       {/* Create Button */}
       {mode === 'idle' && (

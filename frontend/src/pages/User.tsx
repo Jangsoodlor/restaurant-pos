@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useUser } from '../hooks/useUser';
 import { ListControls } from '../components/ListControls';
 import { ActionMenu } from '../components/ActionMenu';
-import { EntityForm, type FormField } from '../components/EntityForm';
+import { EntityForm, type FormField, type InteractionMode as FormMode } from '../components/EntityForm';
 import { DeleteDialog } from '../components/DeleteDialog';
 import { Role, type UserBase, type UserUpdate } from '../api/stub/models';
 
-type InteractionMode = 'idle' | 'creating' | 'editing';
+type InteractionMode = 'idle' | FormMode;
 
 // Field descriptors for user entity
 const USER_FIELDS: FormField[] = [
@@ -190,30 +190,28 @@ export function UserManagementPage() {
       </div>
 
       {/* Create/Edit Mode Form */}
-      {(mode === 'creating' || mode === 'editing') && (
-        <EntityForm
-          mode={mode}
-          title={mode === 'creating' ? 'Create New User' : 'Edit User'}
-          fields={USER_FIELDS}
-          values={formValues}
-          isLoading={isFormLoading}
-          errorMessage={formErrorMessage}
-          onChange={setFormValues}
-          onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-        />
-      )}
+      <EntityForm
+        mode={mode as FormMode}
+        title={mode === 'creating' ? 'Create New User' : 'Edit User'}
+        fields={USER_FIELDS}
+        values={formValues}
+        isLoading={isFormLoading}
+        isOpen={mode === 'creating' || mode === 'editing'}
+        errorMessage={formErrorMessage}
+        onChange={setFormValues}
+        onSubmit={handleFormSubmit}
+        onCancel={handleCancel}
+      />
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirmUserId && (
-        <DeleteDialog
-          itemName={deleteUserName}
-          isPending={isDeleting}
-          errorMessage={deleteError?.message}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setDeleteConfirmUserId(null)}
-        />
-      )}
+      <DeleteDialog
+        itemName={deleteUserName}
+        isPending={isDeleting}
+        isOpen={!!deleteConfirmUserId}
+        errorMessage={deleteError?.message}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirmUserId(null)}
+      />
 
       {/* Create Button */}
       {mode === 'idle' && (
