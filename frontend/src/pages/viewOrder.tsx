@@ -6,18 +6,30 @@ import { OrderDetailModal } from '@/components/OrderDetailModal';
 import { DeleteDialog } from '@/components/DeleteDialog';
 import type { Order } from '@/api/stub';
 
-function formatTimeSince(dateString: string): string {
+function formatTimeSince(date: Date | string | undefined): string {
+  if (!date) return 'N/A';
+
+  let then: Date;
+
+  if (typeof date === 'string') {
+    // If it comes in as a string, fix the label
+    const forcedUtcString = date.replace(/ GMT.*/, ' UTC');
+    then = new Date(forcedUtcString);
+  } else {
+    then = new Date(Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds()
+    ));
+  }
+
   const now = new Date();
-  const then = new Date(dateString);
   const diffMs = now.getTime() - then.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return '< 1 min ago';
-  if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  return `${Math.max(0, diffMins)} min ago`;
 }
 
 export default function ViewOrder() {
@@ -78,7 +90,7 @@ export default function ViewOrder() {
                   <span className="bold">Created:</span> {formatTimeSince(order.createdAt)}
                 </p>
                 <p className="no-margin" style={{ fontSize: '0.9rem' }}>
-                  <span className="bold">Total:</span> ${order.total?.toFixed(2) || '0.00'}
+                  <span className="bold">Status:</span> {order.status || 'draft'}
                 </p>
               </div>
 
@@ -104,7 +116,7 @@ export default function ViewOrder() {
         isPending={hook.isDeleting}
         isOpen={!!deleteTarget}
         onConfirm={() => {
-          if (deleteTarget) {
+          if (deleteTarget && deleteTarget.id) {
             hook.deleteOrder(deleteTarget.id);
             setDeleteTarget(null);
           }

@@ -1,7 +1,7 @@
 """SQLModel table definitions for order module - separate from DTOs to avoid import issues."""
 
 from datetime import datetime, timezone
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, Column, DateTime
 
 from ...table import Table
 from ...user import User
@@ -18,6 +18,7 @@ class Order(SQLModel, table=True):
     status: OrderStatus = Field(default=OrderStatus.DRAFT)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True)),
     )
     closed_at: datetime | None = Field(default=None)
 

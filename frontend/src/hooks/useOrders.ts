@@ -43,7 +43,7 @@ export default function useOrders() {
         quantity: item.quantity,
         modifierIds: item.modifiers,
       }));
-      
+
       return orderApiClient.createOrderOrderPost({
         bodyCreateOrderOrderPost: {
           order: {

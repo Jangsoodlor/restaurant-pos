@@ -58,9 +58,9 @@ export function OrderDetailModal({
 
   const handleEditModeToggle = () => {
     if (!isEditMode) {
-      setEditTableId(String(order.table_id));
-      setEditUserId(String(order.user_id));
-      setEditStatus(order.status);
+      setEditTableId(String(order.tableId || ''));
+      setEditUserId(String(order.userId || ''));
+      setEditStatus(order.status || 'draft');
     }
     setIsEditMode(!isEditMode);
   };
@@ -68,7 +68,7 @@ export function OrderDetailModal({
   const handleSaveOrderChanges = () => {
     // TODO: Implement order update via hook
     setIsEditMode(false);
-    if (onOrderUpdate) {
+    if (onOrderUpdate && order.id) {
       onOrderUpdate(order.id);
     }
   };
@@ -82,7 +82,7 @@ export function OrderDetailModal({
   };
 
   const handleDeleteOrder = () => {
-    if (onOrderDelete) {
+    if (onOrderDelete && order.id) {
       onOrderDelete(order.id);
     }
   };
@@ -203,19 +203,14 @@ export function OrderDetailModal({
                   <p className="no-margin" style={{ fontSize: '0.9rem' }}>
                     <strong>{item.itemName}</strong>
                   </p>
-                  {item.modifierIds && item.modifierIds.length > 0 && (
-                    <p className="no-margin" style={{ fontSize: '0.85rem', color: '#666' }}>
-                      Modifiers: {item.modifierIds.join(', ')}
-                    </p>
-                  )}
-                  {editingLineItem?.id === item.id ? (
+                  {editingLineItem?.id === item.id && editingLineItem ? (
                     <div className="row" style={{ marginTop: '0.25rem', gap: '0.25rem' }}>
                       <input
                         type="number"
                         min="1"
-                        value={editingLineItem.quantity}
+                        value={editingLineItem?.quantity || 0}
                         onChange={(e) =>
-                          setEditingLineItem({
+                          editingLineItem && setEditingLineItem({
                             ...editingLineItem,
                             quantity: Number(e.target.value),
                           })
@@ -225,15 +220,17 @@ export function OrderDetailModal({
                       <button
                         className="button small"
                         onClick={() => {
-                          lineItemsHook.updateLineItem(
-                            {
-                              lineItemId: item.id,
-                              lineItemUpdate: { quantity: editingLineItem.quantity },
-                            },
-                            {
-                              onSuccess: () => setEditingLineItem(null),
-                            }
-                          );
+                          if (item.id && editingLineItem) {
+                            lineItemsHook.updateLineItem(
+                              {
+                                lineItemId: item.id,
+                                lineItemUpdate: { quantity: editingLineItem.quantity },
+                              },
+                              {
+                                onSuccess: () => setEditingLineItem(null),
+                              }
+                            );
+                          }
                         }}
                       >
                         Save
@@ -247,7 +244,7 @@ export function OrderDetailModal({
                     </div>
                   ) : (
                     <p className="no-margin" style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                      {item.quantity} × ${item.unitPrice.toFixed(2)} = ${(item.quantity * item.unitPrice).toFixed(2)}
+                      {item.quantity || 0} × ${item.unitPrice.toFixed(2)} = ${((item.quantity || 0) * item.unitPrice).toFixed(2)}
                     </p>
                   )}
                 </div>
@@ -258,9 +255,9 @@ export function OrderDetailModal({
                       <button
                         className="button small transparent"
                         onClick={() =>
-                          setEditingLineItem({
+                          item.id && setEditingLineItem({
                             id: item.id,
-                            quantity: item.quantity,
+                            quantity: item.quantity || 1,
                           })
                         }
                       >
@@ -268,7 +265,7 @@ export function OrderDetailModal({
                       </button>
                       <button
                         className="button small transparent"
-                        onClick={() => setDeleteLineItemTarget(item.id)}
+                        onClick={() => item.id && setDeleteLineItemTarget(item.id)}
                       >
                         Delete
                       </button>
