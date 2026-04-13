@@ -77,18 +77,18 @@
 
 Use native bun test.
 
-- [ ] 6.1 Test CreateOrder flow: select table → select waiter → browse menu → add items with modifiers → click Create Order → single POST /order/ call with full payload → redirect to list
-- [ ] 6.2 Test OrderFormCard: items added locally to state, reflected immediately in Order Items list
-- [ ] 6.3 Test OrderFormCard: edit quantity, delete item, changes reflected in Order Items
-- [ ] 6.4 Test OrderFormCard: validation (require table, waiter, at least 1 item before Create enabled)
-- [ ] 6.5 Test ViewOrder list: displays orders, filters by status tabs, time elapsed calculates correctly
-- [ ] 6.6 Test OrderDetailModal: click order → modal opens → can edit table/waiter/status → save updates → can add/edit/delete items
-- [ ] 6.7 Test OrderDetailModal: delete order → confirmation → order removed from list
-- [ ] 6.8 Test error handling: API failures show error messages gracefully (both create and edit flows)
-- [ ] 6.9 Test loading states: spinners/disabled buttons appear during POST /order/
-- [ ] 6.10 Test hook: useOrders().createOrder() called with full order payload (table, user, lineItems with modifiers)
-- [ ] 6.11 Verify all routes work: `/orders`, `/orders/create` navigate correctly
-- [ ] 6.12 Test Cancel: abandons draft order, redirects to `/orders` without saving
+- [x] 6.1 Test CreateOrder flow: select table → select waiter → browse menu → add items with modifiers → click Create Order → single POST /order/ call with full payload → redirect to list
+- [x] 6.2 Test OrderFormCard: items added locally to state, reflected immediately in Order Items list
+- [x] 6.3 Test OrderFormCard: edit quantity, delete item, changes reflected in Order Items
+- [x] 6.4 Test OrderFormCard: validation (require table, waiter, at least 1 item before Create enabled)
+- [x] 6.5 Test ViewOrder list: displays orders, filters by status tabs, time elapsed calculates correctly
+- [x] 6.6 Test OrderDetailModal: click order → modal opens → can edit table/waiter/status → save updates → can add/edit/delete items
+- [x] 6.7 Test OrderDetailModal: delete order → confirmation → order removed from list
+- [x] 6.8 Test error handling: API failures show error messages gracefully (both create and edit flows)
+- [x] 6.9 Test loading states: spinners/disabled buttons appear during POST /order/
+- [x] 6.10 Test hook: useOrders().createOrder() called with full order payload (table, user, lineItems with modifiers)
+- [x] 6.11 Verify all routes work: `/orders`, `/orders/create` navigate correctly
+- [x] 6.12 Test Cancel: abandons draft order, redirects to `/orders` without saving
 
 ## 7. Code Cleanup & Verification
 
@@ -101,7 +101,7 @@ Use native bun test.
 - [x] 7.7 Delete any obsolete helper functions/state that's no longer needed (e.g., old form state, step tracking)
 - [x] 7.8 Run linter on modified files to catch style issues
 - [x] 7.9 Run type checker (TypeScript) to verify no type errors
-- [ ] 7.10 Commit changes with descriptive message
+- [x] 7.10 Commit changes with descriptive message
 
 ## 8. Documentation & Handoff
 
@@ -109,4 +109,4 @@ Use native bun test.
 - [x] 8.2 Add brief comments in OrderDetailModal explaining modal workflow and editing pattern
 - [x] 8.3 Add brief comments in OrderFormCard explaining full-order-builder pattern (local state → single submit)
 - [x] 8.4 Update any relevant README or dev documentation if workflow changed
-- [ ] 8.5 Archive the change artifact or mark ready for review
+- [x] 8.5 Archive the change artifact or mark ready for review

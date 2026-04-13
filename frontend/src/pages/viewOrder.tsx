@@ -69,13 +69,13 @@ export default function ViewOrder() {
               <div className="max">
                 <h6 className="no-margin">Order #{order.id}</h6>
                 <p className="no-margin" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
-                  <span className="bold">Table:</span> {order.table?.tableName || 'N/A'}
+                  <span className="bold">Table ID:</span> {order.tableId}
                 </p>
                 <p className="no-margin" style={{ fontSize: '0.9rem' }}>
-                  <span className="bold">Created by:</span> {order.user?.name || 'N/A'}
+                  <span className="bold">Waiter ID:</span> {order.userId}
                 </p>
                 <p className="no-margin" style={{ fontSize: '0.9rem' }}>
-                  <span className="bold">Created:</span> {formatTimeSince(order.created_at)}
+                  <span className="bold">Created:</span> {formatTimeSince(order.createdAt)}
                 </p>
                 <p className="no-margin" style={{ fontSize: '0.9rem' }}>
                   <span className="bold">Total:</span> ${order.total?.toFixed(2) || '0.00'}

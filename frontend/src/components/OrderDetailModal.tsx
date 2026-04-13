@@ -51,8 +51,9 @@ export function OrderDetailModal({
 
   if (!order) return null;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleString();
   };
 
   const handleEditModeToggle = () => {
@@ -98,7 +99,7 @@ export function OrderDetailModal({
         <div>
           <h5 className="no-margin">Order #{order.id}</h5>
           <p className="no-margin" style={{ fontSize: '0.85rem', color: '#888' }}>
-            {formatDate(order.created_at)}
+            {formatDate(order.createdAt)}
           </p>
         </div>
         <button
@@ -115,10 +116,10 @@ export function OrderDetailModal({
         {!isEditMode ? (
           <div>
             <p className="no-margin">
-              <strong>Table:</strong> {order.table?.tableName || 'N/A'}
+              <strong>Table ID:</strong> {order.tableId}
             </p>
             <p className="no-margin">
-              <strong>Waiter:</strong> {order.user?.name || 'N/A'}
+              <strong>Waiter ID:</strong> {order.userId}
             </p>
             <p className="no-margin">
               <strong>Status:</strong> <span className="badge">{order.status}</span>

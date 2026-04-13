@@ -20,22 +20,40 @@ export default function useOrders() {
       }),
   });
 
-  // Create order - accepts full payload: {table_id, user_id, lineItems: [{menuItemId, quantity, modifiers?: []},...]}
+  // Create order - accepts full payload with enriched lineItems containing all required fields
+  // lineItems should be: {menuItemId, quantity, modifiers?, itemName, unitPrice}
   const createMutation = useMutation({
-    mutationFn: (payload: {
+    mutationFn: async (payload: {
       table_id: number;
       user_id: number;
-      lineItems: Array<{ menuItemId: number; quantity: number; modifiers?: number[] }>;
-    }) =>
-      orderApiClient.createOrderOrderPost({
+      lineItems: Array<{
+        menuItemId: number;
+        quantity: number;
+        modifiers?: number[];
+        itemName: string;
+        unitPrice: number;
+      }>;
+    }) => {
+      // Transform to API format: backend creates order then we add line items
+      const lineItemsForApi = payload.lineItems.map(item => ({
+        orderId: 0, // will be set by backend
+        menuItemId: item.menuItemId,
+        itemName: item.itemName,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        modifierIds: item.modifiers,
+      }));
+      
+      return orderApiClient.createOrderOrderPost({
         bodyCreateOrderOrderPost: {
           order: {
             tableId: payload.table_id,
             userId: payload.user_id,
           },
-          orderLineItems: payload.lineItems,
+          orderLineItems: lineItemsForApi,
         },
-      }),
+      });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import useOrders from '@/hooks/useOrders';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { useTables } from '@/hooks/useTable';
@@ -30,7 +30,7 @@ interface LocalLineItem {
 }
 
 export function OrderFormCard() {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const ordersHook = useOrders();
   const { items: menuItems = [], isLoading: menuLoading } = useMenuItems();
   const { data: tables = [], isLoading: tablesLoading } = useTables();
@@ -101,7 +101,7 @@ export function OrderFormCard() {
       return;
     }
 
-    // Convert local line items to API payload format
+    // Convert local line items to API payload format with enriched data
     const payload = {
       table_id: Number(tableId),
       user_id: Number(userId),
@@ -109,6 +109,8 @@ export function OrderFormCard() {
         menuItemId: item.menuItemId,
         quantity: item.quantity,
         modifiers: item.selectedModifierIds,
+        itemName: item.menuItem.name,
+        unitPrice: item.menuItem.price,
       })),
     };
 
