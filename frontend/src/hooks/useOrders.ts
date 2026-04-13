@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApiClient } from '@/api/client';
-import type { Order, OrderCreate, OrderUpdate, OrderStatus } from '@/api/stub';
+import type { Order, OrderUpdate, OrderStatus } from '@/api/stub';
 import { useMemo, useState } from 'react';
 
 const ORDERS_QUERY_KEY = ['orders'];
@@ -20,12 +20,19 @@ export default function useOrders() {
       }),
   });
 
-  // Create order
+  // Create order - accepts full payload: {table_id, user_id, lineItems: [{menuItemId, quantity, modifiers?: []},...]}
   const createMutation = useMutation({
-    mutationFn: (payload: { order: OrderCreate; lineItems: any[] }) =>
+    mutationFn: (payload: {
+      table_id: number;
+      user_id: number;
+      lineItems: Array<{ menuItemId: number; quantity: number; modifiers?: number[] }>;
+    }) =>
       orderApiClient.createOrderOrderPost({
         bodyCreateOrderOrderPost: {
-          order: payload.order,
+          order: {
+            tableId: payload.table_id,
+            userId: payload.user_id,
+          },
           orderLineItems: payload.lineItems,
         },
       }),

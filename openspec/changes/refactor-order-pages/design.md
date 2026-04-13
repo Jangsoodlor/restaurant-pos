@@ -7,9 +7,9 @@ This design establishes the refactored architecture following the Menu.tsx patte
 ## Goals / Non-Goals
 
 **Goals:**
-- Separate concerns: OrderList (viewing/filtering) and OrderCreate (guided multi-step workflow)
-- Enforce hook-first pattern: all API interactions via `useOrders()` and `useOrderLineItems()`, no direct client imports in components
-- Improve UX: modal for quick order inspection; dedicated page for order creation encourages thoughtful workflow
+- Separate concerns: OrderList (viewing/filtering) and OrderCreate (full order builder on dedicated page)
+- Enforce hook-first pattern: all API interactions via `useOrders()` and `useMenuItems()`, no direct client imports in components
+- Improve UX: full-page order builder with all selections (table, menu items, modifiers) in one form, single API call to create
 - Match established patterns: align with Menu.tsx component architecture (hooks + filters + reusable components)
 - Enable modal-based order management: edit, update status, manage items without leaving list view
 
@@ -32,22 +32,17 @@ This design establishes the refactored architecture following the Menu.tsx patte
 - **Trade-off**: Limited viewport for complex orders with many items (mitigated by scrollable modal content); changes app routing convention (intentional, documented in proposal as BREAKING)
 - **Alternatives Considered**: Separate page (rejected: slower UX, unnecessary navigation), toast notifications (rejected: insufficient for multi-action workflows)
 
-### 3. **Custom OrderFormCard Component (vs EntityForm)**
-- **Decision**: Create lightweight `OrderFormCard` component for inline order creation; don't reuse EntityForm for this flow
-- **Rationale**: Order creation is a multi-step workflow (form → menu browser → finish), not a simple create/edit modal. EntityForm is modal-based; order creation needs full-page space for menu browsing
-- **Alternatives Considered**: Extend EntityForm to support multi-step (rejected: increases complexity, EntityForm is meant for single modals); keep EntityForm for initial form (rejected: still modal-based, doesn't leave room for menu browsing step)
+### 3. **OrderFormCard: Full Order Builder Component**
+- **Decision**: Create `OrderFormCard` as a comprehensive order builder (not just form-filling). Users select table, menu items (with modifiers), then submit entire order in ONE action
+- **Rationale**: Single-step creation is faster UX and simpler data flow. Build line items locally in component state, then POST to `/order/` with full order payload (table, waiter, line items) in one call. No intermediate order skeleton
+- **Alternatives Considered**: Multi-step form (rejected: adds complexity, slower UX); modal-based (rejected: doesn't have room for menu browser); keeping EntityForm (rejected: EntityForm is generic modal, doesn't fit full-page builder pattern)
 
-### 4. **Menu Browsing in CreateOrder Page**
-- **Decision**: After creating order skeleton, display a card-based menu browser (matching Menu.tsx layout) for users to add items
-- **Rationale**: Users can browse, filter, and add items in familiar interface; integrated experience rather than modal pop-ups
-- **Trade-off**: Requires component reuse from Menu.tsx or independent menu browser; increases page complexity (mitigated by clear step indicators)
+### 4. **OrderFormCard State Management**
+- **Decision**: Use React `useState` for local line items array (building order), then submit entire order at once via `useOrders().createOrder()`
+- **Rationale**: Simpler than per-item API calls; single transaction reduces inconsistent state; matches pattern of Menu.tsx for local filtering before submit
+- **State shape**: `{ table_id, user_id, lineItems: [{menuItemId, quantity, modifiers}, ...] }`
 
-### 5. **State Management: Component State + TanStack Query**
-- **Decision**: Use React `useState` for UI state (form visibility, editing line item), TanStack Query hooks for server state (orders, line items)
-- **Rationale**: Matches existing pattern (Menu.tsx, User.tsx); simple component logic, predictable caching/invalidation
-- **Alternatives Considered**: Redux (rejected: not in use), Zustand (rejected: hooks sufficient, would add dependency)
-
-### 6. **OrderDetailModal Component**
+### 5. **OrderDetailModal Component**
 - **Decision**: New reusable modal component with toggle buttons for edit mode, edit fields for table/waiter/status, inline line item CRUD
 - **Rationale**: Encapsulates modal complexity, reusable in future features (e.g., order history, bulk actions)
 - **Content**: Read-only view → click edit → inline form fields → save/cancel
@@ -57,23 +52,26 @@ This design establishes the refactored architecture following the Menu.tsx patte
 | Risk | Mitigation |
 |------|-----------|
 | **Modal viewport too small for large orders** | Use scrollable modal content; consider collapsible line item details |
-| **Menu browser on CreateOrder page adds cognitive load** | Clear step indicator (e.g., "Step 2: Add Items") and visual separation between form and menu |
-| **Hook state management misses edge cases** | Comprehensive tests on `useOrders()` and `useOrderLineItems()` hooks; validate TanStack Query invalidation logic |
-| **BREAKING: No `/orders/{id}` route breaks bookmarks/sharing** | Acceptable (POS system, not public-facing); update any team documentation |
-| **Component reuse: menu browser duplicated or coupled** | Extract shared menu browser logic into reusable hook (e.g., `useMenuBrowser()`) if needed |
+| **OrderFormCard gets cognitively complex with many menu items** | Use filters/search in menu browser section; collapsible sections for modifiers per item |
+| **Losing order data if user closes page mid-creation** | Consider localStorage backup of draft order (out of scope for now, can add later) |
+| **BREAKING: No `/orders/{id}` route breaks bookmarks/sharing** | Acceptable (POS system, not public-facing); use modal for all order details |
+| **Single POST call fails = entire order creation fails** | Backend validates atomically; frontend displays clear error; user can retry |
 
 ## Migration Plan
 
-1. **Phase 1**: Create hooks and components (OrderDetailModal, OrderFormCard, enhanced useOrders)
-2. **Phase 2**: Refactor ViewOrder.tsx to use new modal pattern; test list rendering and modal interactions
-3. **Phase 3**: Refactor CreateOrder.tsx to use custom form and menu browser; remove EntityForm usage
-4. **Phase 4**: Remove direct API imports from both pages; validate hook usage
-5. **Deployment**: Single commit/PR (feature is internal, no public API changes)
-6. **Rollback**: Revert to previous ViewOrder/CreateOrder; no data migration needed
+1. **Phase 1**: Create enhanced `useOrders()` hook supporting full payload order creation with line items
+2. **Phase 2**: Create `OrderFormCard` component: table selector + menu browser + modifiers + local line items state
+3. **Phase 3**: Integrate OrderFormCard into CreateOrder.tsx; implement single-submit flow
+4. **Phase 4**: Create OrderDetailModal component for viewing/editing existing orders
+5. **Phase 5**: Refactor ViewOrder.tsx to use list + modal pattern
+6. **Phase 6**: Remove direct API imports, validate hook usage, test full flows
+7. **Deployment**: Single commit/PR
+8. **Rollback**: Revert to previous ViewOrder/CreateOrder; no data migration needed
 
 ## Open Questions
 
-- Should the OrderDetailModal be exported/reused in future features (e.g., admin panel), or is it page-specific?
-- Do we need filtering/sorting on the OrderList (by status, table, waiter)? Proposal mentions status tabs; confirm scope.
-- Should CreateOrder support bulk line item import or templated orders? (Likely out of scope, but worth confirming)
-- Test coverage: unit tests for hooks? Component tests for modals/forms?
+- Should OrderFormCard support saving drafts (localStorage)? (Out of scope for v1)
+- Do we need filtering/sorting on the OrderList (by status, table, waiter)? Status tabs are in scope.
+- Should modifiers be required or optional per menu item? (Backend should define; frontend passes payload)
+- Test coverage: unit tests for `useOrders()` with full payload? Component tests for OrderFormCard?
+- Should backend validate modifiers exist before accepting order? (Yes, before insertion)
