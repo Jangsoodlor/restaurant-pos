@@ -94,7 +94,8 @@ export function OrderForm() {
 
     const orderCreatePayload: OrderCreate = {
       tableId: Number(tableId),
-      userId: Number(userId)
+      userId: Number(userId),
+      status: 'in_progress'
     }
 
     const orderLineItemsPayload: OrderLineItemBase[] = []
