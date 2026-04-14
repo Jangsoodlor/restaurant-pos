@@ -4,8 +4,10 @@ import useOrders from '@/hooks/useOrders';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { useTables } from '@/hooks/useTable';
 import { useUser } from '@/hooks/useUser';
+import { useMenuModifiers } from '@/hooks/useMenuModifiers';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderSummary } from './OrderSummary';
+import { DraftLineItemEditModal } from './DraftLineItemEditModal';
 import type { BodyCreateOrderOrderPost, OrderLineItemBase, OrderCreate } from '@/api/stub';
 
 /**
@@ -18,7 +20,7 @@ interface LocalLineItem {
   menuItemId: number;
   menuItem: any;
   quantity: number;
-  // selectedModifierIds: number[];
+  selectedModifierIds: number[];
 }
 
 export function OrderFormCard() {
@@ -27,6 +29,7 @@ export function OrderFormCard() {
   const { items: menuItems = [], isLoading: menuLoading } = useMenuItems();
   const { data: tables = [], isLoading: tablesLoading } = useTables();
   const { users = [], isLoading: usersLoading } = useUser();
+  const { modifiers: availableModifiers } = useMenuModifiers();
 
   // Form state
   const [tableId, setTableId] = useState('');
@@ -53,7 +56,7 @@ export function OrderFormCard() {
       menuItemId,
       menuItem,
       quantity,
-      // selectedModifierIds: Array.from(modifiers),
+      selectedModifierIds: [],
     };
 
     setLineItems([...lineItems, newItem]);
@@ -62,13 +65,13 @@ export function OrderFormCard() {
     setQuantityForItem({ ...quantityForItem, [menuItemId]: 1 });
   };
 
-  const handleEditLineItemQuantity = (tempId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
+  const handleSaveLineItemUpdates = (tempId: string, newQuantity: number, selectedModifierIds: number[]) => {
     setLineItems(
       lineItems.map((item) =>
-        item.tempId === tempId ? { ...item, quantity: newQuantity } : item
+        item.tempId === tempId ? { ...item, quantity: newQuantity, selectedModifierIds } : item
       )
     );
+    setEditingLineItemId(null);
   };
 
   function handleDeleteLineItem(tempId: string) {
@@ -89,18 +92,6 @@ export function OrderFormCard() {
       return;
     }
 
-    // const payload = {
-    //   table_id: Number(tableId),
-    //   user_id: Number(userId),
-    //   lineItems: lineItems.map((item) => ({
-    //     menuItemId: item.menuItemId,
-    //     quantity: item.quantity,
-    //     // modifiers: item.selectedModifierIds,
-    //     itemName: item.menuItem.name,
-    //     unitPrice: item.menuItem.price,
-    //   })),
-    // };
-
     const orderCreatePayload: OrderCreate = {
       tableId: Number(tableId),
       userId: Number(userId)
@@ -115,7 +106,7 @@ export function OrderFormCard() {
         unitPrice: item.menuItem.price,
         quantity: item.quantity,
         notes: "Placeholder Notes",
-        // modifierIds: [],
+        modifierIds: item.selectedModifierIds,
       }
       orderLineItemsPayload.push(singleOrderLineItem)
     }
@@ -148,7 +139,13 @@ export function OrderFormCard() {
   };
 
   const orderTotal = lineItems.reduce(
-    (sum, item) => sum + item.menuItem.price * item.quantity,
+    (sum, item) => {
+      const modifierSum = item.selectedModifierIds.reduce((mSum, modId) => {
+        const mod = availableModifiers.find((m) => m.id === modId);
+        return mSum + (mod?.price || 0);
+      }, 0);
+      return sum + (item.menuItem.price + modifierSum) * item.quantity;
+    },
     0
   );
 
@@ -259,11 +256,23 @@ export function OrderFormCard() {
           orderTotal={orderTotal}
           editingLineItemId={editingLineItemId}
           isCreating={ordersHook.isCreating}
-          onEditQuantity={handleEditLineItemQuantity}
           onDeleteItem={handleDeleteLineItem}
           onSetEditingLineItemId={setEditingLineItemId}
         />
       </div>
+
+      {editingLineItemId && (
+        <DraftLineItemEditModal
+          item={{
+            tempId: editingLineItemId,
+            itemName: lineItems.find(i => i.tempId === editingLineItemId)?.menuItem.name || '',
+            quantity: lineItems.find(i => i.tempId === editingLineItemId)?.quantity || 1,
+            selectedModifierIds: lineItems.find(i => i.tempId === editingLineItemId)?.selectedModifierIds || []
+          }}
+          onClose={() => setEditingLineItemId(null)}
+          onSave={handleSaveLineItemUpdates}
+        />
+      )}
 
     </div>
   );

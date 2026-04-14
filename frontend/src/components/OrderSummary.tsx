@@ -1,5 +1,6 @@
 import React from 'react';
 import type { MenuItem } from '@/api/stub/models/MenuItem';
+import { useMenuModifiers } from '@/hooks/useMenuModifiers';
 
 /**
  * OrderSummary Component
@@ -12,7 +13,7 @@ interface LineItem {
   menuItemId: number;
   menuItem: MenuItem;
   quantity: number;
-  // selectedModifierIds: number[];
+  selectedModifierIds: number[];
 }
 
 interface OrderSummaryProps {
@@ -20,7 +21,6 @@ interface OrderSummaryProps {
   orderTotal: number;
   editingLineItemId: string | null;
   isCreating?: boolean;
-  onEditQuantity: (tempId: string, newQuantity: number) => void;
   onDeleteItem: (tempId: string) => void;
   onSetEditingLineItemId: (tempId: string | null) => void;
 }
@@ -30,10 +30,11 @@ export function OrderSummary({
   orderTotal,
   editingLineItemId,
   isCreating = false,
-  onEditQuantity,
   onDeleteItem,
   onSetEditingLineItemId,
 }: OrderSummaryProps) {
+  const { modifiers: availableModifiers } = useMenuModifiers();
+
   return (
     <div>
       <p
@@ -82,15 +83,14 @@ export function OrderSummary({
                 <p className="no-margin" style={{ fontWeight: 500, fontSize: '14px' }}>
                   {item.menuItem.name}
                 </p>
-                {/* TODO: re-enabled once Item Modifiers is implemented. */}
-                {/* {item.selectedModifierIds.length > 0 && (
+                {item.selectedModifierIds.length > 0 && (
                   <p
                     className="no-margin"
                     style={{ fontSize: '12px', color: 'var(--on-surface-variant)' }}
                   >
-                    Modifiers: {item.selectedModifierIds.join(', ')}
+                    Modifiers: {item.selectedModifierIds.map(id => availableModifiers.find(m => m.id === id)?.name || id).join(', ')}
                   </p>
-                )} */}
+                )}
                 <div
                   style={{
                     display: 'flex',
@@ -99,68 +99,44 @@ export function OrderSummary({
                     marginTop: '6px',
                   }}
                 >
-                  {editingLineItemId === item.tempId ? (
-                    <>
-                      <div className="field border no-margin">
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            onEditQuantity(item.tempId, Number(e.target.value))
-                          }
-                          style={{ width: '60px', textAlign: 'center' }}
-                        />
-                      </div>
+                  {(() => {
+                    const modifierSum = item.selectedModifierIds.reduce((sum, modId) => {
+                      const mod = availableModifiers.find((m) => m.id === modId);
+                      return sum + (mod?.price || 0);
+                    }, 0);
+                    const unitPrice = item.menuItem.price + modifierSum;
+                    return (
                       <span
                         style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}
                       >
-                        × ${item.menuItem.price.toFixed(2)}
+                        {item.quantity} × ${unitPrice.toFixed(2)} ={' '}
+                        <strong style={{ color: 'var(--on-surface)' }}>
+                          ${(item.quantity * unitPrice).toFixed(2)}
+                        </strong>
                       </span>
-                      <span style={{ fontSize: '13px', fontWeight: 500 }}>
-                        = ${(item.quantity * item.menuItem.price).toFixed(2)}
-                      </span>
-                      <button
-                        className="transparent small"
-                        onClick={() => onSetEditingLineItemId(null)}
-                        style={{ fontSize: '12px' }}
-                      >
-                        Done
-                      </button>
-                    </>
-                  ) : (
-                    <span
-                      style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}
-                    >
-                      {item.quantity} × ${item.menuItem.price.toFixed(2)} ={' '}
-                      <strong style={{ color: 'var(--on-surface)' }}>
-                        ${(item.quantity * item.menuItem.price).toFixed(2)}
-                      </strong>
-                    </span>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
 
-              {editingLineItemId !== item.tempId && (
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button
-                    className="transparent circle small"
-                    onClick={() => onSetEditingLineItemId(item.tempId)}
-                    title="Edit quantity"
-                    style={{ minWidth: '32px', minHeight: '32px' }}
-                  >
-                    <i>edit</i>
-                  </button>
-                  <button
-                    className="transparent circle small"
-                    onClick={() => onDeleteItem(item.tempId)}
-                    title="Remove item"
-                    style={{ minWidth: '32px', minHeight: '32px' }}
-                  >
-                    <i>close</i>
-                  </button>
-                </div>
-              )}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  className="transparent circle small"
+                  onClick={() => onSetEditingLineItemId(item.tempId)}
+                  title="Edit item"
+                  style={{ minWidth: '32px', minHeight: '32px' }}
+                >
+                  <i>edit</i>
+                </button>
+                <button
+                  className="transparent circle small"
+                  onClick={() => onDeleteItem(item.tempId)}
+                  title="Remove item"
+                  style={{ minWidth: '32px', minHeight: '32px' }}
+                >
+                  <i>close</i>
+                </button>
+              </div>
             </div>
           ))}
 
