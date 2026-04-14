@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tableApiClient } from '../api/client';
-import type { Table, TableBase, TableUpdate } from '../api/stub/models';
+import type { Table, TableBase, TableUpdate } from '@/api/stub/models';
 
 export const useTables = () => {
   return useQuery({
