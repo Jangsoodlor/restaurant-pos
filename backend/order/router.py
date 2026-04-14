@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from ..common import EntityNotFoundError
+from ..user.dependencies import get_current_user
 from .models import (
     Order,
     OrderCreate,
@@ -20,9 +21,11 @@ OrderLineItemRepoDep = Annotated[
     OrderLineItemRepository, Depends(OrderLineItemRepository.from_session)
 ]
 
+
 router = APIRouter(
     prefix="/order",
     tags=["order"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

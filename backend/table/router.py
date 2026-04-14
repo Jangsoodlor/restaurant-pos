@@ -4,14 +4,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..common import EntityNotFoundError
+from ..user.dependencies import get_current_user
 from .models import Table, TableBase, TableUpdate
 from .repository import TableRepository
 
 RepoDep = Annotated[TableRepository, Depends(TableRepository.from_session)]
 
+
 router = APIRouter(
     prefix="/table",
     tags=["table"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

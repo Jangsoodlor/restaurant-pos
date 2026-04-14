@@ -16,7 +16,7 @@ from backend.order.models.order_status import OrderStatus
 @pytest.fixture(name="user_fixture")
 def user_fixture(session: Session):
     """Create a sample User for testing."""
-    user = User(name="Test Waiter", role=Role.WAITER)
+    user = User(name="Test Waiter", role=Role.WAITER, password_hash="hash")
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -257,11 +257,15 @@ class TestOrderRepository:
     ):
         """Test filtering orders by user_id."""
         # Create User 2
-        response = client.post("/user/", json={"name": "Chef", "role": "cook"})
+        response = client.post(
+            "/user/", json={"name": "Chef", "role": "cook", "password": "pass123"}
+        )
         user_2_id = response.json()["id"]
 
         # Get User 1
-        response = client.post("/user/", json={"name": "Waiter", "role": "waiter"})
+        response = client.post(
+            "/user/", json={"name": "Waiter", "role": "waiter", "password": "pass123"}
+        )
         user_1_id = response.json()["id"]
 
         # Create orders for different users
@@ -291,7 +295,9 @@ class TestOrderRepository:
         self, client: TestClient, table_fixture: Table, order_request_payload
     ):
         """Test filtering orders with multiple filters."""
-        response = client.post("/user/", json={"name": "Waiter", "role": "waiter"})
+        response = client.post(
+            "/user/", json={"name": "Waiter", "role": "waiter", "password": "pass123"}
+        )
         user_id = response.json()["id"]
 
         # Create multiple orders
@@ -497,7 +503,9 @@ class TestOrderList:
         self, client: TestClient, table_fixture: Table, order_request_payload
     ):
         """Test filtering by user_id."""
-        user_resp = client.post("/user/", json={"name": "Waiter", "role": "waiter"})
+        user_resp = client.post(
+            "/user/", json={"name": "Waiter", "role": "waiter", "password": "pass123"}
+        )
         user_id = user_resp.json()["id"]
 
         client.post(
