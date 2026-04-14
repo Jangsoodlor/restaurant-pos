@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { userApiClient } from '../api/client';
-import type { User, Role, UserBase, UserUpdate } from '../api/stub/models';
+import type { UserRead, Role, UserCreate, UserUpdate } from '@/api/stub/models';
 
 export function useUser() {
   const queryClient = useQueryClient();
@@ -11,7 +11,7 @@ export function useUser() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Fetch users List
-  const { data: users = [], isLoading, isError, error } = useQuery<User[]>({
+  const { data: users = [], isLoading, isError, error } = useQuery<UserRead[]>({
     queryKey: ['users'],
     queryFn: () => userApiClient.listUsersUserGet(),
   });
@@ -45,8 +45,8 @@ export function useUser() {
 
   // Handle Create
   const createMutation = useMutation({
-    mutationFn: (userBase: UserBase) =>
-      userApiClient.createUserUserPost({ userBase }),
+    mutationFn: (userCreate: UserCreate) =>
+      userApiClient.createUserUserPost({ userCreate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

@@ -88,7 +88,7 @@ def login_user(
         )
 
     access_token = create_access_token(
-        data={"sub": str(user.id), "role": user.role.value}
+        data={"sub": str(user.id), "name": user.name, "role": user.role.value}
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
