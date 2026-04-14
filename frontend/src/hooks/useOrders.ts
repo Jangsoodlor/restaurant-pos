@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApiClient } from '@/api/client';
-import type { Order, OrderUpdate, OrderStatus, BodyCreateOrderOrderPost } from '@/api/stub';
+import type { Order, OrderWithLineItems, OrderUpdate, OrderStatus, BodyCreateOrderOrderPost } from '@/api/stub';
 import { useMemo, useState } from 'react';
 
 const ORDERS_QUERY_KEY = ['orders'];
@@ -11,7 +11,7 @@ export default function useOrders() {
   const [tableIdFilter, setTableIdFilter] = useState<number | null>(null);
 
   // Fetch orders
-  const { data: orders = [], isLoading, isError, error } = useQuery<Order[]>({
+  const { data: orders = [], isLoading, isError, error } = useQuery<OrderWithLineItems[]>({
     queryKey: ORDERS_QUERY_KEY,
     queryFn: () =>
       orderApiClient.listOrdersOrderGet({
@@ -46,8 +46,8 @@ export default function useOrders() {
 
   // Group by status for tabs
   const groupedOrders = useMemo(() => {
-    const ongoing = orders.filter((o) => o.status === 'draft' || o.status === 'in_progress');
-    const completed = orders.filter((o) => o.status === 'completed' || o.status === 'cancelled');
+    const ongoing = orders.filter((o) => o.order.status === 'draft' || o.order.status === 'in_progress');
+    const completed = orders.filter((o) => o.order.status === 'completed' || o.order.status === 'cancelled');
     return { ongoing, completed };
   }, [orders]);
 
