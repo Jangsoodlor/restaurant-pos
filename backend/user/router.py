@@ -7,7 +7,6 @@ from ..common import EntityNotFoundError
 from .dependencies import get_current_user
 from .models import (
     User,
-    UserBase,
     UserCreate,
     UserRead,
     UserUpdate,
