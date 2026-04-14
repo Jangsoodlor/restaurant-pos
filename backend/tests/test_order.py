@@ -211,7 +211,8 @@ class TestOrderRepository:
         response = client.get("/order/?status=draft")
         assert response.status_code == 200
         assert len(response.json()) == 1
-        assert response.json()[0]["status"] == "draft"
+        assert response.json()[0]["order"]["status"] == "draft"
+        assert "order_line_items" in response.json()[0]
 
     def test_list_with_table_id_filter(
         self,
@@ -248,7 +249,8 @@ class TestOrderRepository:
         response = client.get(f"/order/?table_id={table_fixture.id}")
         assert response.status_code == 200
         assert len(response.json()) == 1
-        assert response.json()[0]["table_id"] == table_fixture.id
+        assert response.json()[0]["order"]["table_id"] == table_fixture.id
+        assert "order_line_items" in response.json()[0]
 
     def test_list_with_user_id_filter(
         self, client: TestClient, table_fixture: Table, order_request_payload
@@ -282,7 +284,8 @@ class TestOrderRepository:
         response = client.get(f"/order/?user_id={user_1_id}")
         assert response.status_code == 200
         assert len(response.json()) == 1
-        assert response.json()[0]["user_id"] == user_1_id
+        assert response.json()[0]["order"]["user_id"] == user_1_id
+        assert "order_line_items" in response.json()[0]
 
     def test_list_with_multiple_filters(
         self, client: TestClient, table_fixture: Table, order_request_payload
@@ -369,26 +372,6 @@ class TestOrderLineItemRepository:
         assert line_item.id is not None
         assert line_item.order_id == order_fixture.id
         assert line_item.quantity == 1
-
-    def test_create_line_item_with_modifiers(
-        self,
-        client: TestClient,
-        order_fixture: Order,
-        menu_item_fixture: MenuItem,
-        modifier_fixture: MenuItem,
-    ):
-        """Test creating a line item with modifiers via API."""
-        payload = {
-            "order_id": order_fixture.id,
-            "menu_item_id": menu_item_fixture.id,
-            "item_name": menu_item_fixture.name,
-            "unit_price": menu_item_fixture.price,
-            "quantity": 2,
-            "modifier_ids": [modifier_fixture.id],
-        }
-        response = client.post(f"/order/{order_fixture.id}/line-items/", json=payload)
-        assert response.status_code == 201
-        assert response.json()["quantity"] == 2
 
     def test_line_item_subtotal(
         self,
@@ -485,7 +468,8 @@ class TestOrderList:
         response = client.get("/order/?status=draft")
         assert response.status_code == 200
         assert len(response.json()) == 1
-        assert response.json()[0]["status"] == "draft"
+        assert response.json()[0]["order"]["status"] == "draft"
+        assert "order_line_items" in response.json()[0]
 
     def test_get_orders_filter_by_table(
         self, client: TestClient, user_fixture: User, order_request_payload
@@ -671,186 +655,4 @@ class TestOrderDelete:
     def test_delete_order_not_found(self, client: TestClient):
         """Test deleting a non-existent order."""
         response = client.delete("/order/999")
-        assert response.status_code == 404
-
-
-# =====================================================================
-# Test OrderLineItem Endpoints
-# =====================================================================
-
-
-class TestLineItemList:
-    """Test suite for GET /order/{order_id}/line-items/ endpoint."""
-
-    def test_get_line_items_for_order(
-        self, client: TestClient, order_fixture: Order, line_item_fixture: OrderLineItem
-    ):
-        """Test listing line items for an order."""
-        response = client.get(f"/order/{order_fixture.id}/line-items/")
-        assert response.status_code == 200
-        assert len(response.json()) == 1
-
-    def test_get_line_items_order_not_found(self, client: TestClient):
-        """Test listing line items for non-existent order."""
-        response = client.get("/order/999/line-items/")
-        assert response.status_code == 404
-
-    def test_get_line_items_pagination(
-        self, client: TestClient, order_fixture: Order, menu_item_fixture: MenuItem
-    ):
-        """Test pagination for line items."""
-        # Create multiple line items
-        for i in range(5):
-            client.post(
-                f"/order/{order_fixture.id}/line-items/",
-                json={
-                    "order_id": order_fixture.id,
-                    "menu_item_id": menu_item_fixture.id,
-                    "item_name": menu_item_fixture.name,
-                    "unit_price": menu_item_fixture.price,
-                    "quantity": i + 1,
-                },
-            )
-
-        response = client.get(f"/order/{order_fixture.id}/line-items/?offset=0&limit=2")
-        assert response.status_code == 200
-        assert len(response.json()) == 2
-
-
-class TestLineItemCreate:
-    """Test suite for POST /order/{order_id}/line-items/ endpoint."""
-
-    def test_post_line_item_success(
-        self, client: TestClient, order_fixture: Order, menu_item_fixture: MenuItem
-    ):
-        """Test creating a line item successfully."""
-        payload = {
-            "order_id": order_fixture.id,
-            "menu_item_id": menu_item_fixture.id,
-            "item_name": menu_item_fixture.name,
-            "unit_price": menu_item_fixture.price,
-            "quantity": 2,
-        }
-        response = client.post(f"/order/{order_fixture.id}/line-items/", json=payload)
-        assert response.status_code == 201
-        assert response.json()["quantity"] == 2
-
-    def test_post_line_item_with_modifiers(
-        self,
-        client: TestClient,
-        order_fixture: Order,
-        menu_item_fixture: MenuItem,
-        modifier_fixture: MenuItem,
-    ):
-        """Test creating a line item with modifiers."""
-        payload = {
-            "order_id": order_fixture.id,
-            "menu_item_id": menu_item_fixture.id,
-            "item_name": menu_item_fixture.name,
-            "unit_price": menu_item_fixture.price,
-            "quantity": 1,
-            "modifier_ids": [modifier_fixture.id],
-        }
-        response = client.post(f"/order/{order_fixture.id}/line-items/", json=payload)
-        assert response.status_code == 201
-
-    def test_post_line_item_bad_order_id(
-        self, client: TestClient, menu_item_fixture: MenuItem
-    ):
-        """Test creating a line item for non-existent order."""
-        payload = {
-            "order_id": 999,
-            "menu_item_id": menu_item_fixture.id,
-            "item_name": menu_item_fixture.name,
-            "unit_price": menu_item_fixture.price,
-        }
-        response = client.post("/order/999/line-items/", json=payload)
-        assert response.status_code == 404
-
-    def test_post_line_item_defaults_quantity(
-        self, client: TestClient, order_fixture: Order, menu_item_fixture: MenuItem
-    ):
-        """Test that quantity defaults to 1."""
-        payload = {
-            "order_id": order_fixture.id,
-            "menu_item_id": menu_item_fixture.id,
-            "item_name": menu_item_fixture.name,
-            "unit_price": menu_item_fixture.price,
-        }
-        response = client.post(f"/order/{order_fixture.id}/line-items/", json=payload)
-        assert response.status_code == 201
-        assert response.json()["quantity"] == 1
-
-
-class TestLineItemRetrieve:
-    """Test suite for GET /order/{order_id}/line-items/{line_item_id} endpoint."""
-
-    def test_get_line_item_found(
-        self, client: TestClient, order_fixture: Order, line_item_fixture: OrderLineItem
-    ):
-        """Test retrieving an existing line item."""
-        response = client.get(
-            f"/order/{order_fixture.id}/line-items/{line_item_fixture.id}"
-        )
-        assert response.status_code == 200
-        assert response.json()["id"] == line_item_fixture.id
-
-    def test_get_line_item_not_found(self, client: TestClient, order_fixture: Order):
-        """Test retrieving a non-existent line item."""
-        response = client.get(f"/order/{order_fixture.id}/line-items/999")
-        assert response.status_code == 404
-
-
-class TestLineItemUpdate:
-    """Test suite for PATCH /order/{order_id}/line-items/{line_item_id} endpoint."""
-
-    def test_patch_line_item_quantity(
-        self, client: TestClient, order_fixture: Order, line_item_fixture: OrderLineItem
-    ):
-        """Test updating line item quantity."""
-        payload = {"quantity": 5}
-        response = client.patch(
-            f"/order/{order_fixture.id}/line-items/{line_item_fixture.id}", json=payload
-        )
-        assert response.status_code == 200
-        assert response.json()["quantity"] == 5
-
-    def test_patch_line_item_modifiers(
-        self,
-        client: TestClient,
-        order_fixture: Order,
-        line_item_fixture: OrderLineItem,
-        modifier_fixture: MenuItem,
-    ):
-        """Test updating line item modifiers."""
-        payload = {"modifier_ids": [modifier_fixture.id]}
-        response = client.patch(
-            f"/order/{order_fixture.id}/line-items/{line_item_fixture.id}", json=payload
-        )
-        assert response.status_code == 200
-
-    def test_patch_line_item_not_found(self, client: TestClient, order_fixture: Order):
-        """Test patching a non-existent line item."""
-        payload = {"quantity": 5}
-        response = client.patch(
-            f"/order/{order_fixture.id}/line-items/999", json=payload
-        )
-        assert response.status_code == 404
-
-
-class TestLineItemDelete:
-    """Test suite for DELETE /order/{order_id}/line-items/{line_item_id} endpoint."""
-
-    def test_delete_line_item_success(
-        self, client: TestClient, order_fixture: Order, line_item_fixture: OrderLineItem
-    ):
-        """Test deleting a line item successfully."""
-        response = client.delete(
-            f"/order/{order_fixture.id}/line-items/{line_item_fixture.id}"
-        )
-        assert response.status_code == 204
-
-    def test_delete_line_item_not_found(self, client: TestClient, order_fixture: Order):
-        """Test deleting a non-existent line item."""
-        response = client.delete(f"/order/{order_fixture.id}/line-items/999")
         assert response.status_code == 404
