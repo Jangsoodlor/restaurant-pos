@@ -1,16 +1,21 @@
 from sqlmodel import Field, SQLModel
 
 
-class OrderLineItemCreate(SQLModel):
+class OrderLineItemBase(SQLModel):
     """Schema for creating a new line item"""
 
-    order_id: int
     menu_item_id: int
     item_name: str
     unit_price: float
     quantity: int = Field(default=1, ge=1)
     modifier_ids: list[int] = Field(default_factory=list)
     notes: str | None = Field(default=None, max_length=500)
+
+
+class OrderLineItemCreate(OrderLineItemBase):
+    """Schema for creating a new line item"""
+
+    order_id: int
 
 
 class OrderLineItemUpdate(SQLModel):

@@ -7,17 +7,6 @@ import { useUser } from '@/hooks/useUser';
 
 /**
  * OrderFormCard - Full order builder component for single-step order creation
- *
- * Pattern: Full-Order Builder (not multi-step)
- * 1. User selects table and waiter from dropdowns
- * 2. User browses menu items (card layout with quantity input)
- * 3. User clicks "Add to Order" for each item they want → added to local lineItems array
- * 4. Order items list displays all selected items with ability to edit qty or remove
- * 5. User clicks "Create Order" → single POST to backend with full payload:
- *    { table_id, user_id, lineItems: [{ menuItemId, quantity, modifiers }, ...] }
- * 6. On success → redirected to /orders (list view)
- * 7. On cancel → discards all unsaved line items and redirects back
- *
  * All API interactions use hooks (useOrders, useMenuItems, useTables, useUser) - no direct API imports.
  * Local state tracks form selections and line items until single submit.
  */
@@ -46,7 +35,7 @@ export function OrderFormCard() {
   const [modifiersForItem, setModifiersForItem] = useState<Record<number, Set<number>>>({});
   const [editingLineItemId, setEditingLineItemId] = useState<string | null>(null);
 
-  const handleAddLineItem = (menuItemId: number) => {
+  function handleAddLineItem(menuItemId: number) {
     const menuItem = menuItems.find((m) => m.id === menuItemId);
     if (!menuItem) return;
 
@@ -82,12 +71,11 @@ export function OrderFormCard() {
     );
   };
 
-  const handleDeleteLineItem = (tempId: string) => {
+  function handleDeleteLineItem(tempId: string) {
     setLineItems(lineItems.filter((item) => item.tempId !== tempId));
   };
 
-  const handleCreateOrder = () => {
-    // Validation
+  function handleCreateOrder() {
     if (!tableId) {
       alert('Please select a table');
       return;
@@ -101,7 +89,6 @@ export function OrderFormCard() {
       return;
     }
 
-    // Convert local line items to API payload format with enriched data
     const payload = {
       table_id: Number(tableId),
       user_id: Number(userId),
@@ -140,13 +127,13 @@ export function OrderFormCard() {
   );
 
   return (
-    <section className="padding">
-      <h3>Create Order</h3>
+    <div className="padding">
+      <h5>Create Order</h5>
 
-      {/* Selectors */}
-      <div className="row space" style={{ gap: '1rem', marginBottom: '1.5rem' }}>
-        <label style={{ flex: 1 }}>
-          Table:
+      {/* Table + Waiter selectors */}
+      <div className="grid" style={{ marginBottom: '1.25rem' }}>
+        <div className="s6 field border">
+          <label>Table</label>
           <select
             value={tableId}
             onChange={(e) => setTableId(e.target.value)}
@@ -159,10 +146,10 @@ export function OrderFormCard() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label style={{ flex: 1 }}>
-          Waiter:
+        <div className="s6 field border">
+          <label>Waiter</label>
           <select
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
@@ -175,207 +162,295 @@ export function OrderFormCard() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
 
+      {/* Two-column layout: Menu Browser (left) | Order Summary (right) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '1rem',
-          marginBottom: '1.5rem',
+          gridTemplateColumns: '3fr 7fr',
+          gap: '1.5rem',
+          alignItems: 'start',
         }}
       >
-        {/* Menu Browser */}
-        {menuLoading ? (
-          <div>Loading menu items...</div>
-        ) : menuItems.length === 0 ? (
-          <div>No menu items available</div>
-        ) : (
-          menuItems.map((menuItem: any) => (
-            <article
-              key={menuItem.id}
-              className="round border padding"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <h5 className="no-margin">{menuItem.name}</h5>
-                <p className="no-margin" style={{ fontSize: '0.9rem', color: '#666' }}>
-                  ${menuItem.price.toFixed(2)}
-                </p>
-                {menuItem.description && (
-                  <p className="no-margin" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                    {menuItem.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Quantity & Modifiers */}
-              <div style={{ marginTop: '0.75rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                  Quantity:
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantityForItem[menuItem.id] || 1}
-                    onChange={(e) =>
-                      setQuantityForItem({
-                        ...quantityForItem,
-                        [menuItem.id]: Number(e.target.value),
-                      })
-                    }
-                    disabled={ordersHook.isCreating}
-                    style={{ marginLeft: '0.5rem', width: '60px' }}
-                  />
-                </label>
-
-                {/* Modifiers - TODO: Fetch actual modifiers and display checkboxes */}
-                {/* Placeholder for modifiers functionality */}
-              </div>
-
-              <button
-                className="button"
-                onClick={() => handleAddLineItem(menuItem.id)}
-                disabled={ordersHook.isCreating}
-                style={{ marginTop: '0.75rem' }}
-              >
-                Add to Order
-              </button>
-            </article>
-          ))
-        )}
-      </div>
-
-      {/* Order Items List */}
-      {lineItems.length > 0 && (
-        <div
-          className="round border padding"
-          style={{
-            backgroundColor: '#f9f9f9',
-            marginBottom: '1.5rem',
-          }}
-        >
-          <h5 className="no-margin" style={{ marginBottom: '1rem' }}>
-            Order Items ({lineItems.length})
-          </h5>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {lineItems.map((item) => (
-              <div
-                key={item.tempId}
-                className="row space-between"
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#fff',
-                  borderRadius: '0.25rem',
-                  border: '1px solid #ddd',
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p className="no-margin">
-                    <strong>{item.menuItem.name}</strong>
-                  </p>
-                  {item.selectedModifierIds.length > 0 && (
-                    <p className="no-margin" style={{ fontSize: '0.85rem', color: '#666' }}>
-                      Modifiers: {item.selectedModifierIds.join(', ')}
-                    </p>
-                  )}
-                  <p className="no-margin" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                    {editingLineItemId === item.tempId ? (
-                      <div className="row" style={{ gap: '0.5rem', alignItems: 'center' }}>
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleEditLineItemQuantity(item.tempId, Number(e.target.value))
-                          }
-                          style={{ width: '70px' }}
-                        />
-                        <span>×</span>
-                        <span>${item.menuItem.price.toFixed(2)}</span>
-                        <span>=</span>
-                        <strong>${(item.quantity * item.menuItem.price).toFixed(2)}</strong>
-                        <button
-                          className="button small"
-                          onClick={() => setEditingLineItemId(null)}
-                        >
-                          Done
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        {item.quantity} × ${item.menuItem.price.toFixed(2)} ={' '}
-                        <strong>${(item.quantity * item.menuItem.price).toFixed(2)}</strong>
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                <div className="row" style={{ gap: '0.5rem' }}>
-                  {editingLineItemId !== item.tempId && (
-                    <>
-                      <button
-                        className="button small transparent"
-                        onClick={() => setEditingLineItemId(item.tempId)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="button small transparent"
-                        onClick={() => handleDeleteLineItem(item.tempId)}
-                      >
-                        Remove
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Order Total */}
-          <div
+        {/* LEFT: Menu Browser */}
+        <div>
+          <p
+            className="no-margin"
             style={{
-              marginTop: '1rem',
-              paddingTop: '1rem',
-              borderTop: '1px solid #ddd',
-              textAlign: 'right',
+              fontSize: '11px',
+              fontWeight: 500,
+              letterSpacing: '0.07em',
+              textTransform: 'uppercase',
+              color: 'var(--on-surface-variant)',
+              marginBottom: '10px',
             }}
           >
-            <p style={{ fontSize: '1.1rem' }}>
-              <strong>Total: ${orderTotal.toFixed(2)}</strong>
+            Menu
+          </p>
+
+          {menuLoading ? (
+            <div className="center-align padding">
+              <progress className="circle" />
+            </div>
+          ) : menuItems.length === 0 ? (
+            <p className="center-align" style={{ color: 'var(--on-surface-variant)' }}>
+              No menu items available
             </p>
+          ) : (
+            <div className="grid">
+              {menuItems.map((menuItem: any) => (
+                <article
+                  key={menuItem.id}
+                  className="s12 round border"
+                  style={{
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                  }}
+                >
+                  <div>
+                    <p className="no-margin" style={{ fontWeight: 500, fontSize: '14px' }}>
+                      {menuItem.name}
+                    </p>
+                    <p
+                      className="no-margin"
+                      style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}
+                    >
+                      ${menuItem.price.toFixed(2)}
+                    </p>
+                    {menuItem.description && (
+                      <p
+                        className="no-margin"
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--on-surface-variant)',
+                          marginTop: '4px',
+                        }}
+                      >
+                        {menuItem.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="field border no-margin" style={{ flex: '0 0 auto' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantityForItem[menuItem.id] || 1}
+                        onChange={(e) =>
+                          setQuantityForItem({
+                            ...quantityForItem,
+                            [menuItem.id]: Number(e.target.value),
+                          })
+                        }
+                        disabled={ordersHook.isCreating}
+                        style={{ width: '60px', textAlign: 'center' }}
+                      />
+                    </div>
+                    <button
+                      className="border small"
+                      onClick={() => handleAddLineItem(menuItem.id)}
+                      disabled={ordersHook.isCreating}
+                      style={{ flex: 1, fontSize: '13px' }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Order Summary */}
+        <div>
+          <p
+            className="no-margin"
+            style={{
+              fontSize: '11px',
+              fontWeight: 500,
+              letterSpacing: '0.07em',
+              textTransform: 'uppercase',
+              color: 'var(--on-surface-variant)',
+              marginBottom: '10px',
+            }}
+          >
+            Order items {lineItems.length > 0 && `(${lineItems.length})`}
+          </p>
+
+          {lineItems.length === 0 ? (
+            <div
+              style={{
+                border: '1.5px dashed var(--outline-variant)',
+                borderRadius: '10px',
+                padding: '2rem 1rem',
+                textAlign: 'center',
+                color: 'var(--on-surface-variant)',
+                fontSize: '14px',
+              }}
+            >
+              No items added yet
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {lineItems.map((item) => (
+                <div
+                  key={item.tempId}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--outline-variant)',
+                    background: 'var(--surface-variant)',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <p className="no-margin" style={{ fontWeight: 500, fontSize: '14px' }}>
+                      {item.menuItem.name}
+                    </p>
+                    {item.selectedModifierIds.length > 0 && (
+                      <p
+                        className="no-margin"
+                        style={{ fontSize: '12px', color: 'var(--on-surface-variant)' }}
+                      >
+                        Modifiers: {item.selectedModifierIds.join(', ')}
+                      </p>
+                    )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginTop: '6px',
+                      }}
+                    >
+                      {editingLineItemId === item.tempId ? (
+                        <>
+                          <div className="field border no-margin">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleEditLineItemQuantity(item.tempId, Number(e.target.value))
+                              }
+                              style={{ width: '60px', textAlign: 'center' }}
+                            />
+                          </div>
+                          <span
+                            style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}
+                          >
+                            × ${item.menuItem.price.toFixed(2)}
+                          </span>
+                          <span style={{ fontSize: '13px', fontWeight: 500 }}>
+                            = ${(item.quantity * item.menuItem.price).toFixed(2)}
+                          </span>
+                          <button
+                            className="transparent small"
+                            onClick={() => setEditingLineItemId(null)}
+                            style={{ fontSize: '12px' }}
+                          >
+                            Done
+                          </button>
+                        </>
+                      ) : (
+                        <span
+                          style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}
+                        >
+                          {item.quantity} × ${item.menuItem.price.toFixed(2)} ={' '}
+                          <strong style={{ color: 'var(--on-surface)' }}>
+                            ${(item.quantity * item.menuItem.price).toFixed(2)}
+                          </strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {editingLineItemId !== item.tempId && (
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        className="transparent circle small"
+                        onClick={() => setEditingLineItemId(item.tempId)}
+                        title="Edit quantity"
+                        style={{ minWidth: '32px', minHeight: '32px' }}
+                      >
+                        <i>edit</i>
+                      </button>
+                      <button
+                        className="transparent circle small"
+                        onClick={() => handleDeleteLineItem(item.tempId)}
+                        title="Remove item"
+                        style={{ minWidth: '32px', minHeight: '32px' }}
+                      >
+                        <i>close</i>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Order total */}
+              <div
+                style={{
+                  borderTop: '1px solid var(--outline-variant)',
+                  marginTop: '4px',
+                  paddingTop: '12px',
+                  textAlign: 'right',
+                }}
+              >
+                <span style={{ fontSize: '14px', color: 'var(--on-surface-variant)' }}>
+                  Total:{' '}
+                </span>
+                <strong style={{ fontSize: '18px' }}>${orderTotal.toFixed(2)}</strong>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              justifyContent: 'flex-end',
+              marginTop: '1.25rem',
+            }}
+          >
+            <button
+              className="border"
+              onClick={handleCancel}
+              disabled={ordersHook.isCreating}
+            >
+              Cancel
+            </button>
+            <button
+              className="border"
+              onClick={handleCreateOrder}
+              disabled={
+                ordersHook.isCreating ||
+                !tableId ||
+                !userId ||
+                lineItems.length === 0
+              }
+            >
+              {ordersHook.isCreating ? (
+                <>
+                  <progress className="circle small" />
+                  Creating...
+                </>
+              ) : (
+                'Create order'
+              )}
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="row" style={{ gap: '0.5rem', justifyContent: 'flex-end' }}>
-        <button
-          className="button transparent"
-          onClick={handleCancel}
-          disabled={ordersHook.isCreating}
-        >
-          Cancel
-        </button>
-        <button
-          className="button"
-          onClick={handleCreateOrder}
-          disabled={
-            ordersHook.isCreating ||
-            !tableId ||
-            !userId ||
-            lineItems.length === 0
-          }
-        >
-          {ordersHook.isCreating ? 'Creating...' : 'Create Order'}
-        </button>
       </div>
-    </section>
+    </div >
   );
 }

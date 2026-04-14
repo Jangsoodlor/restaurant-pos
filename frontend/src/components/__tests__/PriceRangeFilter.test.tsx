@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { PriceRangeFilter } from './PriceRangeFilter';
+import { PriceRangeFilter } from '../PriceRangeFilter';
 
 describe('PriceRangeFilter', () => {
   it('exports a function component', () => {

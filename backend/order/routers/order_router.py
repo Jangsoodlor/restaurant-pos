@@ -4,8 +4,15 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from ...common import EntityNotFoundError
-from ..models import OrderCreate, OrderUpdate, OrderStatus, OrderLineItemCreate, Order
-from ..repositories import OrderRepository, OrderLineItemRepository
+from ..models import (
+    Order,
+    OrderCreate,
+    OrderLineItemBase,
+    OrderLineItemCreate,
+    OrderStatus,
+    OrderUpdate,
+)
+from ..repositories import OrderLineItemRepository, OrderRepository
 
 OrderRepoDep = Annotated[OrderRepository, Depends(OrderRepository.from_session)]
 OrderLineItemRepoDep = Annotated[
@@ -47,7 +54,7 @@ def retrieve_order(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_order(
     order: OrderCreate,
-    order_line_items: Annotated[Sequence[OrderLineItemCreate], Body(min_length=1)],
+    order_line_items: Annotated[Sequence[OrderLineItemBase], Body(min_length=1)],
     order_repo: OrderRepoDep,
     order_line_item_repo: OrderLineItemRepoDep,
 ) -> Order:
@@ -55,7 +62,7 @@ def create_order(
     created_order = order_repo.create(order)
     line_items_for_order = [
         OrderLineItemCreate(
-            **line_item.model_dump(exclude={"order_id"}),
+            **line_item.model_dump(),
             order_id=created_order.id,
         )
         for line_item in order_line_items
@@ -64,7 +71,6 @@ def create_order(
     try:
         order_line_item_repo.create_many(line_items_for_order)
     except Exception:
-        # Roll back created order if line item creation fails.
         try:
             order_repo.delete(created_order.id)
         except EntityNotFoundError:

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { NameSearchFilter } from './NameSearchFilter';
+import { NameSearchFilter } from '../NameSearchFilter';
 
 describe('NameSearchFilter', () => {
   it('exports a function component', () => {

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { menuApiClient } from '../api/client';
-import type { MenuItem, MenuBase, MenuUpdate } from '../api/stub/models';
+import type { MenuItem, MenuBase, MenuUpdate } from '@/api/stub/models';
 
 export function useMenuItems() {
   const queryClient = useQueryClient();
