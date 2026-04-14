@@ -6,12 +6,12 @@ import { useTables } from '@/hooks/useTable';
 import { useUser } from '@/hooks/useUser';
 import { useMenuModifiers } from '@/hooks/useMenuModifiers';
 import { MenuBrowser } from './MenuBrowser';
-import { OrderSummary } from './OrderSummary';
+import { OrderLineItemSummary } from './OrderLineItemSummary';
 import { DraftLineItemEditModal } from './DraftLineItemEditModal';
 import type { BodyCreateOrderOrderPost, OrderLineItemBase, OrderCreate } from '@/api/stub';
 
 /**
- * OrderFormCard - Full order builder component for single-step order creation
+ * OrderForm - Full order builder component for single-step order creation
  * All API interactions use hooks (useOrders, useMenuItems, useTables, useUser) - no direct API imports.
  * Local state tracks form selections and line items until single submit.
  */
@@ -23,7 +23,7 @@ interface LocalLineItem {
   selectedModifierIds: number[];
 }
 
-export function OrderFormCard() {
+export function OrderForm() {
   const [, navigate] = useLocation();
   const ordersHook = useOrders();
   const { items: menuItems = [], isLoading: menuLoading } = useMenuItems();
@@ -251,7 +251,7 @@ export function OrderFormCard() {
         />
 
         {/* RIGHT: Order Summary */}
-        <OrderSummary
+        <OrderLineItemSummary
           lineItems={lineItems}
           orderTotal={orderTotal}
           editingLineItemId={editingLineItemId}

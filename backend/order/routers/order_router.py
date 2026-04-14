@@ -11,6 +11,7 @@ from ..models import (
     OrderLineItemCreate,
     OrderStatus,
     OrderUpdate,
+    OrderWithLineItems,
 )
 from ..repositories import OrderLineItemRepository, OrderRepository
 
@@ -32,11 +33,19 @@ def list_orders(
     status: OrderStatus | None = None,
     table_id: int | None = None,
     user_id: int | None = None,
-) -> Sequence[Order]:
+) -> Sequence[OrderWithLineItems]:
     """Get all orders with pagination and optional filtering by status, table_id, or user_id."""
-    return repo.list(
+
+    # 1. Fetch the orders from the repository
+    orders = repo.list(
         offset=offset, limit=limit, status=status, table_id=table_id, user_id=user_id
     )
+
+    # 2. Map the SQLModel instances to your DTO
+    return [
+        OrderWithLineItems(order=order, order_line_items=order.line_items)
+        for order in orders
+    ]
 
 
 @router.get("/{order_id}")

@@ -5,7 +5,7 @@ from sqlmodel import select
 from ...common import AbstractRepository
 from ..models.order import OrderCreate, OrderUpdate
 from ..models.order_status import OrderStatus
-from ..models.tables import Order
+from ..models.order_tables import Order
 
 
 class OrderRepository(AbstractRepository[Order, OrderCreate, OrderUpdate]):

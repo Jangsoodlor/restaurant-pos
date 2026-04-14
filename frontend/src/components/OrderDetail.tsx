@@ -31,7 +31,7 @@ interface LineItemEditState {
   quantity: number;
 }
 
-export function OrderDetailModal({
+export function OrderDetail({
   order,
   onClose,
   onOrderUpdate,

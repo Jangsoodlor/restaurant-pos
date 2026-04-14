@@ -5,7 +5,11 @@ from sqlmodel import Session, select
 from backend.user.models import User, Role
 from backend.table.models import Table
 from backend.menu.models import MenuItem, MenuItemType
-from backend.order.models.tables import Order, OrderLineItem, OrderLineItemModifierLink
+from backend.order.models.order_tables import (
+    Order,
+    OrderLineItem,
+    OrderLineItemModifierLink,
+)
 from backend.order.models.order_status import OrderStatus
 
 

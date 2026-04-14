@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'wouter';
 import useOrders from '@/hooks/useOrders';
 import useOrderLineItems from '@/hooks/useOrderLineItems';
-import { OrderDetailModal } from '@/components/OrderDetailModal';
+import { OrderDetail } from '@/components/OrderDetail';
 import { DeleteDialog } from '@/components/DeleteDialog';
 import type { Order } from '@/api/stub';
 
@@ -126,7 +126,7 @@ export default function ViewOrder() {
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <OrderDetailModal
+        <OrderDetail
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onOrderUpdate={() => {

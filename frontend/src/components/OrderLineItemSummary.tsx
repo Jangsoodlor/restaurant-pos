@@ -1,4 +1,3 @@
-import React from 'react';
 import type { MenuItem } from '@/api/stub/models/MenuItem';
 import { useMenuModifiers } from '@/hooks/useMenuModifiers';
 
@@ -25,7 +24,7 @@ interface OrderSummaryProps {
   onSetEditingLineItemId: (tempId: string | null) => void;
 }
 
-export function OrderSummary({
+export function OrderLineItemSummary({
   lineItems,
   orderTotal,
   editingLineItemId,

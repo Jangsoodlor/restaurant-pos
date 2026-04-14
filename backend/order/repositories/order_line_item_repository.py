@@ -7,7 +7,7 @@ from ..models.order_line_item import (
     OrderLineItemCreate,
     OrderLineItemUpdate,
 )
-from ..models.tables import OrderLineItem, OrderLineItemModifierLink
+from ..models.order_tables import OrderLineItem, OrderLineItemModifierLink
 
 
 class OrderLineItemRepository(

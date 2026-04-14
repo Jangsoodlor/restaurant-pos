@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ...common import EntityNotFoundError
 from ..models.order_line_item import OrderLineItemCreate, OrderLineItemUpdate
-from ..models.tables import OrderLineItem
+from ..models.order_tables import OrderLineItem
 from ..repositories import OrderLineItemRepository
 from ..repositories import OrderRepository
 

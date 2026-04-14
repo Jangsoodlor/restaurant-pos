@@ -1,6 +1,6 @@
 import React from 'react';
-import { OrderFormCard } from '@/components/OrderFormCard';
+import { OrderForm } from '@/components/OrderForm';
 
 export default function CreateOrder() {
-  return <OrderFormCard />;
+  return <OrderForm />;
 }

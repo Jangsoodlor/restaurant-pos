@@ -1,8 +1,9 @@
 # Import tables first (register SQLModel tables early)
-from .tables import Order, OrderLineItem, OrderLineItemModifierLink
+from .order_tables import Order, OrderLineItem, OrderLineItemModifierLink
 from .order import OrderCreate, OrderUpdate
 from .order_line_item import OrderLineItemBase, OrderLineItemUpdate, OrderLineItemCreate
 from .order_status import OrderStatus
+from .order_with_line_items import OrderWithLineItems
 
 __all__ = [
     "Order",
@@ -14,4 +15,5 @@ __all__ = [
     "OrderLineItemCreate",
     "OrderLineItemUpdate",
     "OrderStatus",
+    "OrderWithLineItems",
 ]
