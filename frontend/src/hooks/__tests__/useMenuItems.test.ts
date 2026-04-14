@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { useMenuItems } from './useMenuItems';
+import { useMenuItems } from '../useMenuItems';
 
 describe('useMenuItems hook (smoke)', () => {
   it('exports a function', () => {

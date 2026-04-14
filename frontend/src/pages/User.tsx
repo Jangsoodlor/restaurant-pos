@@ -4,9 +4,9 @@ import { ListControls } from '../components/ListControls';
 import { ActionMenu } from '../components/ActionMenu';
 import { EntityForm, type FormField, type InteractionMode as FormMode } from '../components/EntityForm';
 import { DeleteDialog } from '../components/DeleteDialog';
-import { Role, type UserBase, type UserUpdate } from '../api/stub/models';
+import { Role, type UserUpdate } from '../api/stub/models';
 
-type InteractionMode = 'idle' | FormMode;
+type InteractionMode = 'idle' | 'editing';
 
 // Field descriptors for user entity
 const USER_FIELDS: FormField[] = [
@@ -41,9 +41,6 @@ export function UserManagementPage() {
     deleteUser,
     isDeleting,
     deleteError,
-    createUser,
-    isCreating,
-    createError,
     updateUser,
     isUpdating,
     updateError,
@@ -57,13 +54,6 @@ export function UserManagementPage() {
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<number | null>(null);
-
-  const handleCreateClick = () => {
-    setSelectedUserId(null);
-    setFormValues({ name: '', role: Role.Waiter });
-    setFormError(null);
-    setMode('creating');
-  };
 
   const handleEdit = (userId: number) => {
     const user = users.find(u => u.id === userId);
@@ -93,19 +83,7 @@ export function UserManagementPage() {
     if (!validateForm()) return;
 
     try {
-      if (mode === 'creating') {
-        const userBase: UserBase = {
-          name: formValues.name,
-          role: formValues.role,
-        };
-        await new Promise((resolve, reject) => {
-          createUser(userBase, {
-            onSuccess: resolve,
-            onError: reject,
-          });
-        });
-        setMode('idle');
-      } else if (mode === 'editing' && selectedUserId) {
+      if (mode === 'editing' && selectedUserId) {
         const userUpdate: UserUpdate = {
           name: formValues.name,
           role: formValues.role,
@@ -155,9 +133,9 @@ export function UserManagementPage() {
     }
   };
 
-  const isFormLoading = isCreating || isUpdating || isLoading;
+  const isFormLoading = isUpdating || isLoading;
   const formErrorMessage =
-    formError || createError?.message || updateError?.message;
+    formError || updateError?.message;
 
   if (isLoading) return <div>Loading users...</div>;
   if (isError) return <div>Error loading users.</div>;
@@ -192,11 +170,11 @@ export function UserManagementPage() {
       {/* Create/Edit Mode Form */}
       <EntityForm
         mode={mode as FormMode}
-        title={mode === 'creating' ? 'Create New User' : 'Edit User'}
+        title="Edit User"
         fields={USER_FIELDS}
         values={formValues}
         isLoading={isFormLoading}
-        isOpen={mode === 'creating' || mode === 'editing'}
+        isOpen={mode === 'editing'}
         errorMessage={formErrorMessage}
         onChange={setFormValues}
         onSubmit={handleFormSubmit}
@@ -212,18 +190,6 @@ export function UserManagementPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteConfirmUserId(null)}
       />
-
-      {/* Create Button */}
-      {mode === 'idle' && (
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            onClick={handleCreateClick}
-            disabled={isLoading || isDeleting}
-          >
-            + Create User
-          </button>
-        </div>
-      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {users.map((user) => (

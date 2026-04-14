@@ -1,6 +1,6 @@
 type ActionMenuProps = {
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   disabled?: boolean;
   ariaLabel?: string;
 };
@@ -20,22 +20,26 @@ export function ActionMenu({ onEdit, onDelete, disabled = false, ariaLabel = "Ac
       </summary>
 
       <menu className="dropdown right">
-        <button
-          type="button"
-          className="transparent"
-          onClick={onEdit}
-          disabled={disabled}
-        >
-          <i>edit</i>
-        </button>
-        <button
-          type="button"
-          className="transparent error-text"
-          onClick={onDelete}
-          disabled={disabled}
-        >
-          <i>delete</i>
-        </button>
+        {onEdit && (
+          <button
+            type="button"
+            className="transparent"
+            onClick={onEdit}
+            disabled={disabled}
+          >
+            <i>edit</i>
+          </button>
+        )}
+        {onDelete && (
+          <button
+            type="button"
+            className="transparent error-text"
+            onClick={onDelete}
+            disabled={disabled}
+          >
+            <i>delete</i>
+          </button>
+        )}
       </menu>
     </details>
   );

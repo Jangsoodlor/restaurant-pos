@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Register } from '@/pages/Register';
 import { AuthProvider } from '@/context/AuthContext';
-import { LocationProvider } from 'wouter';
 
 // Mock the API client
 mock.module('@/api/client', () => ({
@@ -24,9 +23,7 @@ describe('Register Page', () => {
   it('renders registration form with all fields', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 
@@ -40,9 +37,7 @@ describe('Register Page', () => {
   it('displays login link', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 
@@ -53,25 +48,21 @@ describe('Register Page', () => {
   it('provides role options', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 
     const roleSelect = screen.getByLabelText('Role') as HTMLSelectElement;
     expect(roleSelect.options.length).toBe(3);
-    expect(roleSelect.options[0].text).toBe('Waiter');
-    expect(roleSelect.options[1].text).toBe('Cook');
-    expect(roleSelect.options[2].text).toBe('Manager');
+    expect(roleSelect.options.item(0)?.text).toBe('Waiter');
+    expect(roleSelect.options.item(1)?.text).toBe('Cook');
+    expect(roleSelect.options.item(2)?.text).toBe('Manager');
   });
 
   it('updates input values on user input', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 
@@ -91,9 +82,7 @@ describe('Register Page', () => {
   it('disables submit button while loading', async () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 
@@ -115,9 +104,7 @@ describe('Register Page', () => {
   it('enforces username max length', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Register />
-        </LocationProvider>
+        <Register />
       </AuthProvider>
     );
 

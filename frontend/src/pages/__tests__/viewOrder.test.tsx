@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import ViewOrder from './viewOrder';
+import ViewOrder from '../viewOrder';
 
 describe('ViewOrder', () => {
   it('component exists', () => {

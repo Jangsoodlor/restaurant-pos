@@ -20,15 +20,17 @@ describe('API Client Configuration', () => {
 
   it('API clients have correct base path configured', async () => {
     const { menuApiClient } = await import('@/api/client');
+    const apiClient = menuApiClient as any;
 
-    expect(menuApiClient.configuration?.basePath).toBe('http://localhost:8000');
+    expect(apiClient.configuration?.basePath).toBe('http://localhost:8000');
   });
 
   it('API clients have fetchApi middleware configured', async () => {
     const { menuApiClient } = await import('@/api/client');
+    const apiClient = menuApiClient as any;
 
     // Verify that fetchApi (middleware) is configured
-    expect(menuApiClient.configuration?.fetchApi).toBeDefined();
-    expect(typeof menuApiClient.configuration?.fetchApi).toBe('function');
+    expect(apiClient.configuration?.fetchApi).toBeDefined();
+    expect(typeof apiClient.configuration?.fetchApi).toBe('function');
   });
 });

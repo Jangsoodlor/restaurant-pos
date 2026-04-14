@@ -4,10 +4,10 @@
 TBD - created by archiving change consolidate-dialog-components. Update Purpose after archive.
 ## Requirements
 ### Requirement: User create mutation hook
-The system SHALL provide `useCreateUser` hook in `useUser.ts` that accepts user data and creates a new user via the API. The hook SHALL invalidate the users query cache on success.
+The system SHALL provide `useCreateUser` hook in `useUser.ts` that accepts user data (including `password` in the payload) and creates a new user via the API. The hook SHALL invalidate the users query cache on success.
 
 #### Scenario: Create user with valid data
-- **WHEN** `useCreateUser` mutation is called with `{name: "Alice", role: "waiter"}`
+- **WHEN** `useCreateUser` mutation is called with `{name: "Alice", role: "waiter", password: "password123"}`
 - **THEN** API call is made to create user and users cache is invalidated
 
 #### Scenario: Create user handles error
@@ -46,4 +46,11 @@ All three user mutations (create, update, delete) SHALL follow the same TanStack
 #### Scenario: Mutations use consistent API
 - **WHEN** using `useCreateUser`, `useUpdateUser`, `useDeleteUser`
 - **THEN** all three have signature: `useMutation({ mutationFn, onSuccess })` and return `{ mutate, isPending, error }`
+
+### Requirement: Update base API routing to attach tokens
+The `client.ts` API wrapper SHALL extract the user's active JWT from the global store and attach it as an `Authorization` Bearer token to all outgoing requests.
+
+#### Scenario: Authenticated fetch
+- **WHEN** the `client.ts` client is used to make a request
+- **THEN** an `Authorization: Bearer <token>` header is added to the request headers
 

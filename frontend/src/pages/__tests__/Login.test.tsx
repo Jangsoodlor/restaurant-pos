@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Login } from '@/pages/Login';
 import { AuthProvider } from '@/context/AuthContext';
-import { LocationProvider } from 'wouter';
 
 // Mock the API client
 mock.module('@/api/client', () => ({
@@ -23,9 +22,7 @@ describe('Login Page', () => {
   it('renders login form with username and password fields', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Login />
-        </LocationProvider>
+        <Login />
       </AuthProvider>
     );
 
@@ -38,9 +35,7 @@ describe('Login Page', () => {
   it('displays register link', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Login />
-        </LocationProvider>
+        <Login />
       </AuthProvider>
     );
 
@@ -51,9 +46,7 @@ describe('Login Page', () => {
   it('updates input values on user input', () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Login />
-        </LocationProvider>
+        <Login />
       </AuthProvider>
     );
 
@@ -70,9 +63,7 @@ describe('Login Page', () => {
   it('disables submit button while loading', async () => {
     render(
       <AuthProvider>
-        <LocationProvider>
-          <Login />
-        </LocationProvider>
+        <Login />
       </AuthProvider>
     );
 

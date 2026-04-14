@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { NameSearchFilter } from '@/components/NameSearchFilter';
 import { PriceRangeFilter } from '@/components/PriceRangeFilter';
 import { SortDropdown } from '@/components/SortDropdown';
@@ -8,8 +9,10 @@ import { ActionMenu } from '@/components/ActionMenu';
 import { EntityForm } from '@/components/EntityForm';
 import type { FormField } from '@/components/EntityForm';
 import { DeleteDialog } from '@/components/DeleteDialog';
+import { canCreate, canDelete, canEdit } from '@/utils/permissions';
 
 export default function Menu() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'items' | 'modifiers'>('items');
 
   // Items hook
@@ -22,6 +25,11 @@ export default function Menu() {
   const [editing, setEditing] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [formValues, setFormValues] = useState<Record<string, any>>({ name: '', price: '' });
+
+  const userRole = user?.role ?? null;
+  const canCreateMenu = canCreate('menu', userRole);
+  const canEditMenu = canEdit('menu', userRole);
+  const canDeleteMenu = canDelete('menu', userRole);
 
   const fields: FormField[] = [
     { name: 'name', label: 'Name', type: 'text', required: true },
@@ -43,9 +51,11 @@ export default function Menu() {
         <SortDropdown value={hook.sortOrder} onChange={hook.setSortOrder} />
       </div>
 
-      <nav className="space">
-        <button className="button" onClick={() => { setEditing(null); setFormOpen(true); }}>Create {activeTab === 'items' ? 'Item' : 'Modifier'}</button>
-      </nav>
+      {canCreateMenu && (
+        <nav className="space">
+          <button className="button" onClick={() => { setEditing(null); setFormOpen(true); }}>Create {activeTab === 'items' ? 'Item' : 'Modifier'}</button>
+        </nav>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {(
@@ -63,54 +73,60 @@ export default function Menu() {
                   </p>
                 </div>
 
-                <ActionMenu
-                  onEdit={() => { setEditing(it); setFormValues({ name: it.name, price: it.price }); setFormOpen(true); }}
-                  onDelete={() => setDeleteTarget(it)}
-                  ariaLabel={`Actions for ${it.name}`}
-                />
+                {(canEditMenu || canDeleteMenu) && (
+                  <ActionMenu
+                    onEdit={canEditMenu ? () => { setEditing(it); setFormValues({ name: it.name, price: it.price }); setFormOpen(true); } : undefined}
+                    onDelete={canDeleteMenu ? () => setDeleteTarget(it) : undefined}
+                    ariaLabel={`Actions for ${it.name}`}
+                  />
+                )}
               </article>
             ))
           )
         )}
       </div>
 
-      <EntityForm
-        mode={editing ? 'editing' : 'creating'}
-        title={editing ? 'Edit' : 'Create'}
-        fields={fields}
-        values={formValues}
-        isLoading={(activeTab === 'items' ? itemsHook.isCreating || itemsHook.isUpdating : modifiersHook.isCreating || modifiersHook.isUpdating)}
-        isOpen={formOpen}
-        onChange={(v) => setFormValues(v)}
-        onSubmit={(e) => {
-          e.preventDefault();
-          const payload = { name: formValues.name, price: Number(formValues.price) };
-          if (editing) {
-            if (activeTab === 'items') itemsHook.updateItem({ menuItemId: editing.id, menuUpdate: payload });
-            else modifiersHook.updateModifier({ modifierId: editing.id, menuUpdate: payload });
-          } else {
-            if (activeTab === 'items') itemsHook.createItem(payload);
-            else modifiersHook.createModifier(payload);
-          }
+      {(canCreateMenu || canEditMenu) && (
+        <EntityForm
+          mode={editing ? 'editing' : 'creating'}
+          title={editing ? 'Edit' : 'Create'}
+          fields={fields}
+          values={formValues}
+          isLoading={(activeTab === 'items' ? itemsHook.isCreating || itemsHook.isUpdating : modifiersHook.isCreating || modifiersHook.isUpdating)}
+          isOpen={formOpen}
+          onChange={(v) => setFormValues(v)}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const payload = { name: formValues.name, price: Number(formValues.price) };
+            if (editing) {
+              if (activeTab === 'items') itemsHook.updateItem({ menuItemId: editing.id, menuUpdate: payload });
+              else modifiersHook.updateModifier({ modifierId: editing.id, menuUpdate: payload });
+            } else {
+              if (activeTab === 'items') itemsHook.createItem(payload);
+              else modifiersHook.createModifier(payload);
+            }
 
-          setFormOpen(false);
-          setEditing(null);
-          setFormValues({ name: '', price: '' });
-        }}
-        onCancel={() => { setFormOpen(false); setEditing(null); setFormValues({ name: '', price: '' }); }}
-      />
+            setFormOpen(false);
+            setEditing(null);
+            setFormValues({ name: '', price: '' });
+          }}
+          onCancel={() => { setFormOpen(false); setEditing(null); setFormValues({ name: '', price: '' }); }}
+        />
+      )}
 
-      <DeleteDialog
-        itemName={deleteTarget?.name}
-        isPending={activeTab === 'items' ? itemsHook.isDeleting : modifiersHook.isDeleting}
-        isOpen={!!deleteTarget}
-        onConfirm={() => {
-          if (activeTab === 'items') itemsHook.deleteItem(deleteTarget!.id);
-          else modifiersHook.deleteModifier(deleteTarget!.id);
-          setDeleteTarget(null);
-        }}
-        onCancel={() => setDeleteTarget(null)}
-      />
+      {canDeleteMenu && (
+        <DeleteDialog
+          itemName={deleteTarget?.name}
+          isPending={activeTab === 'items' ? itemsHook.isDeleting : modifiersHook.isDeleting}
+          isOpen={!!deleteTarget}
+          onConfirm={() => {
+            if (activeTab === 'items') itemsHook.deleteItem(deleteTarget!.id);
+            else modifiersHook.deleteModifier(deleteTarget!.id);
+            setDeleteTarget(null);
+          }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </section>
   );
 }

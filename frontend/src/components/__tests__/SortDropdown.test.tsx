@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { SortDropdown } from './SortDropdown';
+import { SortDropdown } from '../SortDropdown';
 
 describe('SortDropdown', () => {
   it('exports a function component', () => {

@@ -3,8 +3,8 @@ import { ActionMenu } from './ActionMenu';
 
 type TableCardProps = {
   table: Table;
-  onEdit: (table: Table) => void;
-  onDelete: (tableId: number) => void;
+  onEdit?: (table: Table) => void;
+  onDelete?: (tableId: number) => void;
   disabled?: boolean;
 };
 
@@ -26,12 +26,14 @@ export function TableCard({ table, onEdit, onDelete, disabled = false }: TableCa
         overflowWrap: 'anywhere',
       }}
     >
-      <ActionMenu
-        onEdit={() => onEdit(table)}
-        onDelete={() => onDelete(table.id!)}
-        disabled={disabled}
-        ariaLabel={`Table actions for ${table.tableName}`}
-      />
+      {(onEdit || onDelete) && (
+        <ActionMenu
+          onEdit={onEdit ? () => onEdit(table) : undefined}
+          onDelete={onDelete ? () => onDelete(table.id!) : undefined}
+          disabled={disabled}
+          ariaLabel={`Table actions for ${table.tableName}`}
+        />
+      )}
       <h6 style={{ marginRight: '2.5rem', marginTop: 0 }}>Table {table.tableName}</h6>
       <p className="no-margin">
         <span className="bold">Status:</span> {table.status}

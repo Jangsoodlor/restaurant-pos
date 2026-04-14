@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from './useTable';
+import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from '../useTable';
 
 describe('useTable Hooks', () => {
   describe('Hook Exports', () => {

@@ -6,6 +6,7 @@ export type FormField = {
   label: string;
   type: 'text' | 'number' | 'select';
   required?: boolean;
+  disabled?: boolean;
   options?: { label: string; value: string }[];
   validate?: (value: any) => string | null;
 };
@@ -85,7 +86,7 @@ export function EntityForm({
                           [field.name]: e.target.value,
                         })
                       }
-                      disabled={isLoading}
+                      disabled={isLoading || !!field.disabled}
                       required={field.required}
                     >
                       {field.options?.map((option) => (
@@ -117,7 +118,7 @@ export function EntityForm({
                           [field.name]: value,
                         });
                       }}
-                      disabled={isLoading}
+                      disabled={isLoading || !!field.disabled}
                       required={field.required}
                       {...(field.type === 'number' && { min: '1' })}
                     />

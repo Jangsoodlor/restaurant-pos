@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useTables, useCreateTable, useUpdateTable, useDeleteTable } from '@/hooks/useTable';
+import { useAuth } from '@/hooks/useAuth';
 import type { Table, TableBase, TableUpdate, TableStatus as TableStatusEnum } from '@/api/stub/models';
 import { TableCard } from '@/components/TableCard';
 import { EntityForm, type FormField, type InteractionMode as FormMode } from '@/components/EntityForm';
 import { DeleteDialog } from '@/components/DeleteDialog';
+import { canCreate, canDelete, canEdit, canEditField } from '@/utils/permissions';
 
 type InteractionMode = 'idle' | FormMode;
 
@@ -36,6 +38,7 @@ const TABLE_FIELDS: FormField[] = [
 
 export function TableStatus() {
   const { data: tables, isPending, error } = useTables();
+  const { user } = useAuth();
   const createMutation = useCreateTable();
   const updateMutation = useUpdateTable();
   const deleteMutation = useDeleteTable();
@@ -49,6 +52,11 @@ export function TableStatus() {
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirmTableId, setDeleteConfirmTableId] = useState<number | null>(null);
+
+  const userRole = user?.role ?? null;
+  const canCreateTable = canCreate('tableStatus', userRole);
+  const canEditTable = canEdit('tableStatus', userRole);
+  const canDeleteTable = canDelete('tableStatus', userRole);
 
   const handleCreateClick = () => {
     setSelectedTableId(null);
@@ -69,11 +77,11 @@ export function TableStatus() {
   };
 
   const validateForm = (): boolean => {
-    if (!formValues.tableName?.toString().trim()) {
+    if (canEditField('tableStatus', 'tableName', userRole) && !formValues.tableName?.toString().trim()) {
       setFormError('Table name is required');
       return false;
     }
-    if (formValues.capacity < 1) {
+    if (canEditField('tableStatus', 'capacity', userRole) && formValues.capacity < 1) {
       setFormError('Capacity must be at least 1');
       return false;
     }
@@ -95,11 +103,16 @@ export function TableStatus() {
         await createMutation.mutateAsync(tableBase);
         setMode('idle');
       } else if (mode === 'editing' && selectedTableId) {
-        const tableUpdate: TableUpdate = {
-          tableName: formValues.tableName,
-          capacity: formValues.capacity,
-          status: formValues.status,
-        };
+        // Waiters can edit status only; managers can edit all fields.
+        const tableUpdate: TableUpdate = canEditField('tableStatus', 'tableName', userRole)
+          ? {
+            tableName: formValues.tableName,
+            capacity: formValues.capacity,
+            status: formValues.status,
+          }
+          : {
+            status: formValues.status,
+          };
         await updateMutation.mutateAsync({ tableId: selectedTableId, tableUpdate });
         setMode('idle');
       }
@@ -138,6 +151,16 @@ export function TableStatus() {
     updateMutation.isPending ||
     deleteMutation.isPending;
 
+  // Build field disabilities based on role
+  const getFieldDisabled = (fieldName: string): boolean => {
+    return !canEditField('tableStatus', fieldName, userRole);
+  };
+
+  const disabledFields = TABLE_FIELDS.map(field => ({
+    ...field,
+    disabled: mode === 'editing' ? getFieldDisabled(field.name) : false,
+  }));
+
   if (isPending) return <progress className="circle medium"></progress>;
   if (error) return <article className="round border red-text">Error loading tables: {error.message}</article>;
 
@@ -151,7 +174,7 @@ export function TableStatus() {
       <EntityForm
         mode={mode as FormMode}
         title={mode === 'creating' ? 'Create New Table' : 'Edit Table'}
-        fields={TABLE_FIELDS}
+        fields={disabledFields}
         values={formValues}
         isLoading={isLoading}
         isOpen={mode === 'creating' || mode === 'editing'}
@@ -171,8 +194,8 @@ export function TableStatus() {
         onCancel={() => setDeleteConfirmTableId(null)}
       />
 
-      {/* Create Button */}
-      {mode === 'idle' && (
+      {/* Create Button - only visible to managers */}
+      {mode === 'idle' && canCreateTable && (
         <div style={{ marginBottom: '1rem' }}>
           <button onClick={handleCreateClick} disabled={isLoading}>
             + Create Table
@@ -186,8 +209,8 @@ export function TableStatus() {
           <TableCard
             key={table.id}
             table={table}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
+            onEdit={canEditTable ? handleEditClick : undefined}
+            onDelete={canDeleteTable ? handleDeleteClick : undefined}
             disabled={isLoading || deleteConfirmTableId !== null}
           />
         ))}

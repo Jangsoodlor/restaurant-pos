@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import { useUser } from './useUser';
+import { useUser } from '../useUser';
 
 describe('useUser Hook', () => {
   describe('Hook Export', () => {

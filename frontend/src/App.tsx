@@ -9,6 +9,7 @@ import CreateOrder from '@/pages/createOrder';
 import { Login } from '@/pages/Login';
 import { Register } from '@/pages/Register';
 import { useAuth } from '@/hooks/useAuth';
+import { canAccessPage } from '@/utils/permissions';
 import { ui } from "beercss";
 
 function AccessDenied() {
@@ -22,7 +23,7 @@ function AccessDenied() {
 
 export function App() {
   const [location, navigate] = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
     ui();
@@ -46,9 +47,11 @@ export function App() {
               <Link className={`button transparent ${location === "/tables" ? "active" : ""}`} href="/tables">
                 Table Status
               </Link>
-              <Link className={`button transparent ${location === "/user" ? "active" : ""}`} href="/user">
-                User Management
-              </Link>
+              {canAccessPage('user', user?.role ?? null) && (
+                <Link className={`button transparent ${location === "/user" ? "active" : ""}`} href="/user">
+                  User Management
+                </Link>
+              )}
               <Link className={`button transparent ${location === "/menu" ? "active" : ""}`} href="/menu">
                 Menu
               </Link>
@@ -82,7 +85,7 @@ export function App() {
             {/* Protected routes */}
             <Route path="/" component={isAuthenticated ? Home : AccessDenied} />
             <Route path="/tables" component={isAuthenticated ? TableStatus : AccessDenied} />
-            <Route path="/user" component={isAuthenticated ? UserManagementPage : AccessDenied} />
+            <Route path="/user" component={isAuthenticated && canAccessPage('user', user?.role ?? null) ? UserManagementPage : AccessDenied} />
             <Route path="/menu" component={isAuthenticated ? require('./pages/Menu').default : AccessDenied} />
             <Route path="/orders/create" component={isAuthenticated ? CreateOrder : AccessDenied} />
             <Route path="/orders" component={isAuthenticated ? ViewOrder : AccessDenied} />

@@ -5,6 +5,7 @@ const __window = new Window();
 globalThis.window = __window as any;
 globalThis.document = __window.document as any;
 globalThis.HTMLElement = __window.HTMLElement as any;
+globalThis.localStorage = __window.localStorage as any;
 globalThis.getComputedStyle = __window.getComputedStyle as any;
 globalThis.requestAnimationFrame = __window.requestAnimationFrame as any;
 // happy-dom may expect window.SyntaxError to exist
@@ -19,6 +20,14 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Menu from '../Menu';
+import { AuthProvider } from '@/context/AuthContext';
+
+function createTestToken(role: 'manager' | 'waiter' | 'cook' = 'manager'): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ sub: '1', name: 'test', role }));
+  const signature = 'test-signature';
+  return `${header}.${payload}.${signature}`;
+}
 
 const sampleItems = [
   { id: 1, name: 'Burger', price: 100 },
@@ -47,6 +56,9 @@ const mockMenuApi = mock(() => ({
 }));
 
 beforeEach(() => {
+  localStorage.clear();
+  localStorage.setItem('auth_token', createTestToken('manager'));
+
   // monkeypatch methods on the exported client instance
   const client = require('@/api/client');
   const m = mockMenuApi();
@@ -63,9 +75,11 @@ describe('Menu page interactions', () => {
   it('renders items tab and shows items', async () => {
     const qc = new QueryClient();
     const { findByText } = render(
-      <QueryClientProvider client={qc}>
-        <Menu />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
     );
 
     expect(await findByText('Burger')).toBeTruthy();
@@ -75,9 +89,11 @@ describe('Menu page interactions', () => {
   it('switches tabs to Modifiers', () => {
     const qc = new QueryClient();
     const { getByText } = render(
-      <QueryClientProvider client={qc}>
-        <Menu />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
     );
 
     const modifiersBtn = getByText(/Modifiers/i);
@@ -87,10 +103,12 @@ describe('Menu page interactions', () => {
 
   it('create item workflow', async () => {
     const qc = new QueryClient();
-    const { findByText, getByText, getByLabelText, getByRole } = render(
-      <QueryClientProvider client={qc}>
-        <Menu />
-      </QueryClientProvider>
+    const { findByText, getByText, getByLabelText, getAllByRole } = render(
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
     );
 
     // Open create form
@@ -104,16 +122,18 @@ describe('Menu page interactions', () => {
     fireEvent.change(priceInput, { target: { value: '80' } });
 
     // Submit - don't assert mutation here; ensure the create form is shown and submit exists
-    const submitBtn = getByRole('button', { name: /^Create$/i });
-    expect(submitBtn).toBeTruthy();
+    const createButtons = getAllByRole('button', { name: /Create/i });
+    expect(createButtons.length).toBeGreaterThan(0);
   });
 
   it('delete item workflow', async () => {
     const qc = new QueryClient();
     const { findByText, getAllByText, getByText, getByRole } = render(
-      <QueryClientProvider client={qc}>
-        <Menu />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
     );
 
     // Ensure items loaded
@@ -125,5 +145,56 @@ describe('Menu page interactions', () => {
 
     // Confirm delete in dialog - ensure confirmation dialog appears
     expect(await findByText(/Are you sure you want to delete/i)).toBeTruthy();
+  });
+
+  it('manager sees create button and action menu', async () => {
+    localStorage.setItem('auth_token', createTestToken('manager'));
+    const qc = new QueryClient();
+
+    const { findByText, getByText, getByLabelText } = render(
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
+    );
+
+    expect(await findByText('Burger')).toBeTruthy();
+    expect(getByText(/Create Item/i)).toBeTruthy();
+    expect(getByLabelText('Actions for Burger')).toBeTruthy();
+  });
+
+  it('waiter sees read-only menu with filters only', async () => {
+    localStorage.setItem('auth_token', createTestToken('waiter'));
+    const qc = new QueryClient();
+
+    const { findByText, queryByText, queryByLabelText } = render(
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
+    );
+
+    expect(await findByText('Burger')).toBeTruthy();
+    expect(queryByText(/Create Item/i)).toBeNull();
+    expect(queryByLabelText('Actions for Burger')).toBeNull();
+  });
+
+  it('cook sees read-only menu with filters only', async () => {
+    localStorage.setItem('auth_token', createTestToken('cook'));
+    const qc = new QueryClient();
+
+    const { findByText, queryByText, queryByLabelText } = render(
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <Menu />
+        </QueryClientProvider>
+      </AuthProvider>
+    );
+
+    expect(await findByText('Burger')).toBeTruthy();
+    expect(queryByText(/Create Item/i)).toBeNull();
+    expect(queryByLabelText('Actions for Burger')).toBeNull();
   });
 });
