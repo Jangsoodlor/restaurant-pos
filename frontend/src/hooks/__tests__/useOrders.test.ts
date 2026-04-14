@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import useOrders from './useOrders';
+import useOrders from '../useOrders';
 
 describe('useOrders', () => {
   it('hook exists', () => {
