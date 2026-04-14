@@ -6,6 +6,7 @@ import { useTables } from '@/hooks/useTable';
 import { useUser } from '@/hooks/useUser';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderSummary } from './OrderSummary';
+import type { BodyCreateOrderOrderPost, OrderLineItemBase, OrderCreate } from '@/api/stub';
 
 /**
  * OrderFormCard - Full order builder component for single-step order creation
@@ -88,28 +89,52 @@ export function OrderFormCard() {
       return;
     }
 
-    const payload = {
-      table_id: Number(tableId),
-      user_id: Number(userId),
-      lineItems: lineItems.map((item) => ({
+    // const payload = {
+    //   table_id: Number(tableId),
+    //   user_id: Number(userId),
+    //   lineItems: lineItems.map((item) => ({
+    //     menuItemId: item.menuItemId,
+    //     quantity: item.quantity,
+    //     // modifiers: item.selectedModifierIds,
+    //     itemName: item.menuItem.name,
+    //     unitPrice: item.menuItem.price,
+    //   })),
+    // };
+
+    const orderCreatePayload: OrderCreate = {
+      tableId: Number(tableId),
+      userId: Number(userId)
+    }
+
+    const orderLineItemsPayload: OrderLineItemBase[] = []
+
+    for (const item of lineItems) {
+      const singleOrderLineItem: OrderLineItemBase = {
         menuItemId: item.menuItemId,
-        quantity: item.quantity,
-        // modifiers: item.selectedModifierIds,
         itemName: item.menuItem.name,
         unitPrice: item.menuItem.price,
-      })),
-    };
+        quantity: item.quantity,
+        notes: "Placeholder Notes",
+        // modifierIds: [],
+      }
+      orderLineItemsPayload.push(singleOrderLineItem)
+    }
+
+    const payload: BodyCreateOrderOrderPost = {
+      order: orderCreatePayload,
+      orderLineItems: orderLineItemsPayload
+    }
 
     console.log(payload)
     // TODO: Implement hook after everything is done. (DO NOT uncomment this line.)
-    // ordersHook.createOrder(payload, {
-    //   onSuccess: () => {
-    //     navigate('/orders');
-    //   },
-    //   onError: (error) => {
-    //     alert(`Failed to create order: ${error?.message || 'Unknown error'}`);
-    //   },
-    // });
+    ordersHook.createOrder(payload, {
+      onSuccess: () => {
+        navigate('/orders');
+      },
+      onError: (error) => {
+        alert(`Failed to create order: ${error?.message || 'Unknown error'}`);
+      },
+    });
   };
 
   const handleCancel = () => {

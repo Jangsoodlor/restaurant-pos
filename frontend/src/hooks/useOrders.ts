@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderApiClient } from '@/api/client';
-import type { Order, OrderUpdate, OrderStatus } from '@/api/stub';
+import type { Order, OrderUpdate, OrderStatus, BodyCreateOrderOrderPost } from '@/api/stub';
 import { useMemo, useState } from 'react';
 
 const ORDERS_QUERY_KEY = ['orders'];
@@ -20,43 +20,16 @@ export default function useOrders() {
       }),
   });
 
-  // Create order - accepts full payload with enriched lineItems containing all required fields
-  // lineItems should be: {menuItemId, quantity, modifiers?, itemName, unitPrice}
   const createMutation = useMutation({
-    mutationFn: async (payload: {
-      table_id: number;
-      user_id: number;
-      lineItems: Array<{
-        menuItemId: number;
-        quantity: number;
-        modifiers?: number[];
-        itemName: string;
-        unitPrice: number;
-      }>;
-    }) => {
-      // Transform to API format: backend creates order then we add line items
-      const lineItemsForApi = payload.lineItems.map(item => ({
-        orderId: 0, // will be set by backend
-        menuItemId: item.menuItemId,
-        itemName: item.itemName,
-        unitPrice: item.unitPrice,
-        quantity: item.quantity,
-        modifierIds: item.modifiers,
-      }));
-
+    mutationFn: async (payload: BodyCreateOrderOrderPost) => {
+      // Since the payload is already perfectly shaped as BodyCreateOrderOrderPost,
+      // you can just pass it directly into the API client!
       return orderApiClient.createOrderOrderPost({
-        bodyCreateOrderOrderPost: {
-          order: {
-            tableId: payload.table_id,
-            userId: payload.user_id,
-          },
-          orderLineItems: lineItemsForApi,
-        },
+        bodyCreateOrderOrderPost: payload,
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
-
   // Update order
   const updateMutation = useMutation({
     mutationFn: ({ orderId, orderUpdate }: { orderId: number; orderUpdate: OrderUpdate }) =>
