@@ -12,9 +12,6 @@ dev:
 test:
 	uv run --env-file .env.test pytest -v
 
-prod:
-	uv run --env-file .env.prod uvicorn main:app --host 0.0.0.0 --port 8000
-
 lint:
 	uv run ruff check .
 

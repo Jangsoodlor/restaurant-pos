@@ -5,7 +5,7 @@ class OrderLineItemBase(SQLModel):
     """Schema for creating a new line item"""
 
     menu_item_id: int
-    item_name: str
+    item_name: str = Field(max_length=255)
     unit_price: float
     quantity: int = Field(default=1, ge=1)
     modifier_ids: list[int] = Field(default_factory=list)

@@ -1,4 +1,6 @@
+import time
 from sqlmodel import Session, SQLModel, create_engine
+from sqlalchemy.exc import OperationalError
 from ..config import get_settings
 from typing import Annotated
 from fastapi import Depends
@@ -7,7 +9,20 @@ engine = create_engine(get_settings().database_url)
 
 
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+    retries = 5
+    while retries > 0:
+        try:
+            SQLModel.metadata.create_all(engine)
+            print("Successfully connected to the database and created tables!")
+            break
+        except OperationalError as e:
+            retries -= 1
+            print(
+                f"Database unavailable, waiting 3 seconds... ({retries} retries left)"
+            )
+            time.sleep(3)
+            if retries == 0:
+                raise e
 
 
 def get_session():

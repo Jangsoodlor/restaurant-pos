@@ -1,12 +1,38 @@
 services:
   database:
-    image: docker.io/mariadb:latest
-    container_name: restaurant-db
-    ports:
-      - "3306:3306"
+    image: mariadb:latest
     env_file:
       - .env
     volumes:
       - data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "3306:3306"
+    networks:
+      - app-net  # <-- ADD THIS
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env.prod
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-net  # <-- ADD THIS
+    restart: on-failure
+
 volumes:
   data:
+
+networks:
+  app-net:
+    driver: bridge

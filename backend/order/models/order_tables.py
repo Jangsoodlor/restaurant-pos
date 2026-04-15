@@ -50,7 +50,7 @@ class OrderLineItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     order_id: int = Field(foreign_key="order.id")
     menu_item_id: int = Field(foreign_key="menuitem.id")
-    item_name: str
+    item_name: str = Field(max_length=255)
     unit_price: float
     quantity: int = Field(default=1, ge=1)
 

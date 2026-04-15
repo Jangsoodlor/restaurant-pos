@@ -12,7 +12,7 @@ class TableStatus(str, Enum):
 class TableBase(SQLModel):
     model_config = ConfigDict(use_enum_values=True)
 
-    table_name: str
+    table_name: str = Field(max_length=255)
     capacity: int = Field(ge=1)
     status: TableStatus
 

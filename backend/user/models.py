@@ -18,7 +18,7 @@ class UserBase(SQLModel):
 
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    password_hash: str
+    password_hash: str = Field(max_length=255)
 
 
 class UserCreate(UserBase):
