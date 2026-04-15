@@ -2,7 +2,7 @@ services:
   database:
     image: mariadb:latest
     env_file:
-      - .env
+      - .env.example
     volumes:
       - data:/var/lib/mysql
     healthcheck:

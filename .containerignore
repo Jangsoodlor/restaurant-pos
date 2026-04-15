@@ -1,0 +1,28 @@
+# General
+.git
+.gitignore
+.env*
+!.env.example
+README.md
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+.mypy_cache/
+backend/.env.prod
+
+# Node / Bun / Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.bun-cache/
+bun.lockb
+*.log
+
+# Databases
+*.sqlite*
+*.db
