@@ -1,8 +1,10 @@
 import { Configuration, MenuApi, OrderApi, UserApi, TableApi } from "./stub";
 
 // 1. Set up the base config
+const apiBase = (import.meta && import.meta.env && import.meta.env.API_BASE) || 'http://localhost:8000';
+
 const apiConfig = new Configuration({
-  basePath: 'http://localhost:8000', // Your FastAPI backend URL
+  basePath: apiBase, // read from frontend/.env via API_BASE
   accessToken: () => {
     const token = localStorage.getItem('auth_token');
     return token ? `Bearer ${token}` : '';

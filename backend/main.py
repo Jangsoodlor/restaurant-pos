@@ -6,6 +6,7 @@ from .user import user_router
 from .table import table_router
 from .menu import menu_router
 from .order import order_router
+from .config import get_settings
 
 
 @asynccontextmanager
@@ -16,9 +17,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Restaurant POS", version="0.5.0")
 
+origins = [origin.strip() for origin in get_settings().cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

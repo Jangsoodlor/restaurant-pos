@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     database_url: str
     secret_key: str
     algorithm: str = "HS256"
+    cors_origins: str = "http://localhost:3000"
 
 
 @lru_cache
