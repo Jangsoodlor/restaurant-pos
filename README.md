@@ -31,7 +31,6 @@ Each role have the following permissions:
 
 | Role/Service | Menu | Table | Order | User |
 | :--- | :--- | :--- | :--- | :--- |
-| **Visitor** | - | - | - | C |
 | **Cook** | R | R | C, R, U, D | - |
 | **Waiter** | R | R, U | C, R, U, D | - |
 | **Manager** | C, R, U, D | C, R, U, D | C, R, U, D | R, U, D |

@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan, title="Restaurant POS", version="0.5.0")
+app = FastAPI(lifespan=lifespan, title="Restaurant POS", version="1.0.0")
 
 origins = [origin.strip() for origin in get_settings().cors_origins.split(",")]
 
