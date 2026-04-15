@@ -9,7 +9,7 @@ class OrderCreate(SQLModel):
     """Schema for creating a new order"""
 
     table_id: int
-    user_id: int
+    user_id: int | None = None
     status: OrderStatus = OrderStatus.DRAFT
 
 

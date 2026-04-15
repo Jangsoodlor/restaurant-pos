@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
 import useOrders from '@/hooks/useOrders';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { useTables } from '@/hooks/useTable';
-import { useUser } from '@/hooks/useUser';
 import { useMenuModifiers } from '@/hooks/useMenuModifiers';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderLineItemSummary } from './OrderLineItemSummary';
@@ -25,15 +25,14 @@ interface LocalLineItem {
 
 export function OrderForm() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const ordersHook = useOrders();
   const { items: menuItems = [], isLoading: menuLoading } = useMenuItems();
   const { data: tables = [], isLoading: tablesLoading } = useTables();
-  const { users = [], isLoading: usersLoading } = useUser();
   const { modifiers: availableModifiers } = useMenuModifiers();
 
   // Form state
   const [tableId, setTableId] = useState('');
-  const [userId, setUserId] = useState('');
   const [lineItems, setLineItems] = useState<LocalLineItem[]>([]);
 
   // Menu browser state (per item)
@@ -83,18 +82,18 @@ export function OrderForm() {
       alert('Please select a table');
       return;
     }
-    if (!userId) {
-      alert('Please select a waiter');
-      return;
-    }
     if (lineItems.length === 0) {
       alert('Please add at least one item to the order');
+      return;
+    }
+    if (!user || !user.id) {
+      alert('User session not available');
       return;
     }
 
     const orderCreatePayload: OrderCreate = {
       tableId: Number(tableId),
-      userId: Number(userId),
+      userId: user.id,
       status: 'in_progress'
     }
 
@@ -154,7 +153,7 @@ export function OrderForm() {
     <div className="padding">
       <h5>Create Order</h5>
 
-      {/* Table + Waiter selectors */}
+      {/* Table selector */}
       <div className="grid" style={{ marginBottom: '1.25rem' }}>
         <div className="s6 field border">
           <label>Table</label>
@@ -167,22 +166,6 @@ export function OrderForm() {
             {tables.map((table: any) => (
               <option key={table.id} value={String(table.id)}>
                 {table.tableName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="s6 field border">
-          <label>Waiter</label>
-          <select
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            disabled={usersLoading || ordersHook.isCreating}
-          >
-            <option value="">Select a waiter</option>
-            {users.map((user: any) => (
-              <option key={user.id} value={String(user.id)}>
-                {user.name}
               </option>
             ))}
           </select>
@@ -211,7 +194,6 @@ export function OrderForm() {
           disabled={
             ordersHook.isCreating ||
             !tableId ||
-            !userId ||
             lineItems.length === 0
           }
         >

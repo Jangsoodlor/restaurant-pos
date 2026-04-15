@@ -253,43 +253,38 @@ class TestOrderRepository:
         assert "order_line_items" in response.json()[0]
 
     def test_list_with_user_id_filter(
-        self, client: TestClient, table_fixture: Table, order_request_payload
+        self,
+        client: TestClient,
+        table_fixture: Table,
+        order_request_payload,
+        current_user_mock: User,
     ):
         """Test filtering orders by user_id."""
-        # Create User 2
-        response = client.post(
-            "/user/", json={"name": "Chef", "role": "cook", "password": "pass123"}
-        )
-        user_2_id = response.json()["id"]
+        current_user_id = current_user_mock.id
 
-        # Get User 1
-        response = client.post(
-            "/user/", json={"name": "Waiter", "role": "waiter", "password": "pass123"}
-        )
-        user_1_id = response.json()["id"]
-
-        # Create orders for different users
+        # Create multiple orders for the current user
         client.post(
             "/order/",
             json=order_request_payload(
                 table_id=table_fixture.id,
-                user_id=user_1_id,
+                user_id=current_user_id,
             ),
         )
         client.post(
             "/order/",
             json=order_request_payload(
                 table_id=table_fixture.id,
-                user_id=user_2_id,
+                user_id=current_user_id,
             ),
         )
 
-        # Filter by user_id
-        response = client.get(f"/order/?user_id={user_1_id}")
+        # Filter by current user's user_id
+        response = client.get(f"/order/?user_id={current_user_id}")
         assert response.status_code == 200
-        assert len(response.json()) == 1
-        assert response.json()[0]["order"]["user_id"] == user_1_id
-        assert "order_line_items" in response.json()[0]
+        assert len(response.json()) == 2
+        for order_with_items in response.json():
+            assert order_with_items["order"]["user_id"] == current_user_id
+            assert "order_line_items" in order_with_items
 
     def test_list_with_multiple_filters(
         self, client: TestClient, table_fixture: Table, order_request_payload

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from ..common import EntityNotFoundError
 from ..user.dependencies import get_current_user
+from ..user.models import User
 from .models import (
     Order,
     OrderCreate,
@@ -66,8 +67,20 @@ def create_order(
     order_line_items: Annotated[Sequence[OrderLineItemBase], Body(min_length=1)],
     order_repo: OrderRepoDep,
     order_line_item_repo: OrderLineItemRepoDep,
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> Order:
     """Create a new order."""
+    # Authorization guard: ensure user_id matches current user
+    if order.user_id is not None and order.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create order for another user",
+        )
+
+    # If no user_id provided, use current user
+    if order.user_id is None:
+        order.user_id = current_user.id
+
     created_order = order_repo.create(order)
     line_items_for_order = [
         OrderLineItemCreate(
