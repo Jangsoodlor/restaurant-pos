@@ -7,15 +7,37 @@ A simple Restaurant POS system.
 Restaurant Point-of-Sales system is a simple point-of-sales web application with restaurant management features, such as seeing order status of each table, managing menus, and managing food orders.
 
 ## System Architecture Overview
-The project follows **Service-Based architecture style** organised into a single architectural quantum consisting of 1 database, 1 user interface instance, and 4 services. The overall architecture of the project is represented using the diagram below:
-<!-- TODO: add diagram -->
+The project follows **Service-Based architecture style** organised into a single architectural quantum consisting of 1 database, 1 user interface instance, and 4 services, which are:
+
+1. User service: Deals with User CRUD operations, as well as user authentication and registration.
+2. Table service: Deals with tables in the restaurant
+3. Menu service: Deals with restaurant menu, as well as menu modifiers (e.g., fried egg, extra rice, etc.).
+4. Order service: Deals with restaurant orders.
+
+The overall architecture of the project is represented using the diagram below:
+
+![diagram](/images/diagram.png)
+
+The `Common` module contains utilities, such as database connection function.
 
 ### CodeCharta Analysis
-<!-- TODO: add them here -->
+
+Excluding test codes
+![diagram](/images/codecharta-isometric.png)
 
 ## User Roles & Permissions
-<!-- TODO: add user roles here -->
 
+Each role have the following permissions:
+
+| Role/Service | Menu | Table | Order | User |
+| :--- | :--- | :--- | :--- | :--- |
+| **Visitor** | - | - | - | C |
+| **Cook** | R | R | C, R, U, D | - |
+| **Waiter** | R | R, U | C, R, U, D | - |
+| **Manager** | C, R, U, D | C, R, U, D | C, R, U, D | R, U, D |
+
+**Legend:**
+C = Create, R = Retrieve, U = Update, D = Delete
 ## Technology Stack
 
 - Frontend: React.

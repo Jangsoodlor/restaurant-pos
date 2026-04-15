@@ -1,18 +1,18 @@
+from abc import ABC
 from collections.abc import Sequence
-from typing import Generic, TypeVar, ClassVar, Any
+from typing import Any, ClassVar, Generic, TypeVar
 
 from sqlmodel import Session, SQLModel, select
 
-from .exceptions import EntityNotFoundError
 from .database import SessionDep
-from .events import EventObserver
+from .exceptions import EntityNotFoundError
 
 Model = TypeVar("Model", bound=SQLModel)
 CreateDTO = TypeVar("CreateDTO", bound=SQLModel)
 UpdateDTO = TypeVar("UpdateDTO", bound=SQLModel)
 
 
-class AbstractRepository(EventObserver, Generic[Model, CreateDTO, UpdateDTO]):
+class AbstractRepository(ABC, Generic[Model, CreateDTO, UpdateDTO]):
     model: ClassVar[Model]
 
     def __init__(
