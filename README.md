@@ -4,7 +4,7 @@ A simple Restaurant POS system.
 
 ## Project Description
 
-Restaurant Point-of-Sales system is a simple point-of-sales web application with restaurant management features, such as seeing order status of each table, managing menus, and managing food orders.
+Restaurant Point-of-Sales system is a simple point-of-sales web application with basic restaurant management features, including table management, menu management, and managing food orders.
 
 ## System Architecture Overview
 The project follows **Service-Based architecture style** organised into a single architectural quantum consisting of 1 database, 1 user interface instance, and 4 services, which are:
