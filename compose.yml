@@ -6,7 +6,7 @@ services:
     volumes:
       - data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mariadb-admin", "ping", "--silent"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -29,11 +29,6 @@ services:
     networks:
       - app-net  # <-- ADD THIS
     restart: on-failure
-    healthcheck:  # <-- 1. ADD THIS HEALTHCHECK
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
   
   frontend:
     build:
@@ -44,8 +39,7 @@ services:
     networks:
       - app-net
     depends_on:  # <-- 2. ADD THIS DEPENDENCY
-      backend:
-        condition: service_healthy
+      - backend
 
 volumes:
   data:

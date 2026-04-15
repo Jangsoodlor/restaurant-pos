@@ -16,7 +16,7 @@ function AccessDenied() {
   return (
     <>
       <h5>Access Denied</h5>
-      <p>Please <Link href="/login">login</Link> to continue.</p>
+      <p>Please <Link href="/login">Login</Link> or <Link href="/register">Register</Link> to continue.</p>
     </>
   );
 }
